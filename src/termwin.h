@@ -30,7 +30,7 @@ termwin *termwin_init( const char *nc_term );
 void termwin_free( termwin *twin );
 
 void termwin_setvterm( termwin *twin, VTerm *term );
-int termwin_getch( termwin *twin, int *ch );
+int termwin_getch( termwin *twin );
 void termwin_refresh( termwin *twin );
 void termwin_resize( termwin *twin );
 void termwin_getsize( termwin *twin, int *rows, int *cols );

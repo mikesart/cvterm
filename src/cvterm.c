@@ -99,13 +99,15 @@ static void sigwinch_handler( int signo )
 
 static void handle_input( VTerm *vt, int master )
 {
-    int ch;
     size_t buflen;
     char buf[ 8192 ];
 
-    while ( ( vterm_output_get_buffer_remaining( vt ) > 0 ) &&
-            !termwin_getch( g_twin, &ch ) )
+    while ( vterm_output_get_buffer_remaining( vt ) > 0 )
     {
+        int ch = termwin_getch( g_twin );
+        if ( ch == -1 )
+            break;
+
         vterm_keyboard_unichar( vt, ( uint32_t )ch, VTERM_MOD_NONE );
     }
 

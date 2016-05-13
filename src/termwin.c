@@ -279,21 +279,31 @@ void termwin_setvterm( termwin *twin, VTerm *vterm )
     vterm_state_set_default_colors( state, &default_color, &default_color );
 }
 
-int termwin_getch( termwin *twin, int *ch )
+int termwin_getch( termwin *twin )
 {
-    *ch = wgetch( twin->win );
+    int key_resize_count = 0;
+    int ch = wgetch( twin->win );
 
     // Kill terminal resize events.
-    while ( *ch == KEY_RESIZE )
-        *ch = wgetch( twin->win );
-
-    if ( *ch == ERR )
+    while ( ch == KEY_RESIZE )
     {
-        clog_warn( CLOG( 0 ), "wgetch failed: %d", errno );
-        return -1;
+        if ( key_resize_count++ > 128 )
+        {
+            // If I resize the gnome-terminal over and over, the input buffer seems
+            // to get filled with an endless supply of KEY_RESIZE events and we hang
+            // here. Workaround this by discarding all our input and starting over.
+            clog_warn( CLOG( 0 ), "wgetch got 128 KEY_RESIZE events: calling flushinp()." );
+            flushinp();
+            return -1;
+        }
+
+        ch = wgetch( twin->win );
     }
 
-    return 0;
+    if ( ch == ERR )
+        clog_warn( CLOG( 0 ), "wgetch failed: %d", errno );
+
+    return ch;
 }
 
 static void termwin_drawcell( termwin *twin, VTermScreen *vts, int row, int col )
