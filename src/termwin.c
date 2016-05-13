@@ -69,7 +69,6 @@ struct termwin
     VTerm *vt;
     WINDOW *win;
     int numcolors;
-    int resized;
     VTermRect damage_rect;
     int pairid_count;
     short pair_table[ MAX_ANSI_COLORS * MAX_ANSI_COLORS ];
@@ -114,7 +113,6 @@ termwin *termwin_init( const char *nc_term )
     twin->win = win;
     twin->vt = NULL;
     twin->numcolors = 0;
-    twin->resized = 0;
 
     memset( &twin->damage_rect, 0, sizeof( twin->damage_rect ) );
     memset( twin->ansi_colors, 0, sizeof( twin->ansi_colors ) );
@@ -459,13 +457,9 @@ void termwin_refresh( termwin *twin )
 
     if ( termwin_draw( twin ) )
     {
-        if ( twin->resized )
-        {
-            refresh();
-            twin->resized = 0;
-        }
-
-        NCURSES_CHECK( ret, wrefresh, twin->win );
+        NCURSES_CHECK( ret, wnoutrefresh, stdscr );
+        NCURSES_CHECK( ret, wnoutrefresh, twin->win );
+        NCURSES_CHECK( ret, doupdate );
     }
 }
 
@@ -540,6 +534,4 @@ void termwin_resize( termwin *twin )
     twin->damage_rect.start_col = 0;
     twin->damage_rect.end_row = maxy;
     twin->damage_rect.end_col = maxx;
-
-    twin->resized = 1;
 }
