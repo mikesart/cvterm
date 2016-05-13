@@ -59,6 +59,9 @@
         }                                                            \
     } while ( 0 )
 
+#define NCURSES_COLORED_CHTYPE( ch, attr, pair ) \
+    ( ( ch ) | ( attr ) | COLOR_PAIR( pair ) )
+
 #define MAX_ANSI_COLORS 256
 
 struct termwin
@@ -73,38 +76,6 @@ struct termwin
     VTermColor ansi_colors[ MAX_ANSI_COLORS ];
     uint16_t vterm_color_hash[ 32768 ]; // 2^(5+5+5)
 };
-
-// http://dev.networkerror.org/utf8/
-static const char g_utf8_horz[] = "\xe2\x94\x80";        // BOX_UTF8_HORZ
-static const char g_utf8_vert[] = "\xe2\x94\x82";        // BOX_UTF8_VERT
-static const char g_utf8_topleft[] = "\xe2\x94\x8c";     // BOX_UTF8_TOPLEFT
-static const char g_utf8_topright[] = "\xe2\x94\x90";    // BOX_UTF8_TOPRIGHT
-static const char g_utf8_bottomleft[] = "\xe2\x94\x94";  // BOX_UTF8_BOTTOMLEFT
-static const char g_utf8_bottomright[] = "\xe2\x94\x98"; // BOX_UTF8_BOTTOMRIGHT
-
-static void draw_borders( WINDOW *win )
-{
-    int i;
-    int maxy = getmaxy( win );
-    int maxx = getmaxx( win );
-
-    mvwprintw( win, 0, 0, g_utf8_topleft );
-    mvwprintw( win, maxy - 1, 0, g_utf8_bottomleft );
-    mvwprintw( win, 0, maxx - 1, g_utf8_topright );
-    mvwprintw( win, maxy - 1, maxx - 1, g_utf8_bottomright );
-
-    for ( i = 1; i < ( maxy - 1 ); i++ )
-    {
-        mvwprintw( win, i, 0, g_utf8_vert );
-        mvwprintw( win, i, maxx - 1, g_utf8_vert );
-    }
-
-    for ( i = 1; i < ( maxx - 1 ); i++ )
-    {
-        mvwprintw( win, 0, i, g_utf8_horz );
-        mvwprintw( win, maxy - 1, i, g_utf8_horz );
-    }
-}
 
 termwin *termwin_init( const char *nc_term )
 {
@@ -379,6 +350,69 @@ int termwin_damage_callback( VTermRect rect, void *user )
     return 1;
 }
 
+static void draw_border( termwin *twin, WINDOW *win )
+{
+#if 1
+    int attr = A_BOLD;
+    int pairid = get_ncurses_pairid( twin, COLOR_MAGENTA, 0 );
+
+    wborder( win,
+             NCURSES_COLORED_CHTYPE( ACS_VLINE, attr, pairid ),
+             NCURSES_COLORED_CHTYPE( ACS_VLINE, attr, pairid ),
+             NCURSES_COLORED_CHTYPE( ACS_HLINE, attr, pairid ),
+             NCURSES_COLORED_CHTYPE( ACS_HLINE, attr, pairid ),
+             NCURSES_COLORED_CHTYPE( ACS_ULCORNER, attr, pairid ),
+             NCURSES_COLORED_CHTYPE( ACS_URCORNER, attr, pairid ),
+             NCURSES_COLORED_CHTYPE( ACS_LLCORNER, attr, pairid ),
+             NCURSES_COLORED_CHTYPE( ACS_LRCORNER, attr, pairid ) );
+#elif 0
+    wborder( win, '|', '|', '-', '-', '+', '+', '+', '+' );
+#elif 1
+    int x = 0;
+    int y = 0;
+    int h = getmaxy( twin->win ) - 1;
+    int w = getmaxx( twin->win ) - 1;
+    mvwaddch( win, y, x, ACS_ULCORNER );
+    mvwaddch( win, y, x + w, ACS_URCORNER );
+    mvwaddch( win, y + h, x, ACS_LLCORNER );
+    mvwaddch( win, y + h, x + w, ACS_LRCORNER );
+
+    mvwhline( win, y, x + 1, ACS_HLINE, w - 1 );
+    mvwhline( win, y + h, x + 1, ACS_HLINE, w - 1 );
+    mvwvline( win, y + 1, x, ACS_VLINE, h - 1 );
+    mvwvline( win, y + 1, x + w, ACS_VLINE, h - 1 );
+#else
+    // http://dev.networkerror.org/utf8/
+    static const char g_utf8_horz[] = "\xe2\x94\x80";        // BOX_UTF8_HORZ
+    static const char g_utf8_vert[] = "\xe2\x94\x82";        // BOX_UTF8_VERT
+    static const char g_utf8_topleft[] = "\xe2\x94\x8c";     // BOX_UTF8_TOPLEFT
+    static const char g_utf8_topright[] = "\xe2\x94\x90";    // BOX_UTF8_TOPRIGHT
+    static const char g_utf8_bottomleft[] = "\xe2\x94\x94";  // BOX_UTF8_BOTTOMLEFT
+    static const char g_utf8_bottomright[] = "\xe2\x94\x98"; // BOX_UTF8_BOTTOMRIGHT
+
+    int i;
+    int maxy = getmaxy( win );
+    int maxx = getmaxx( win );
+
+    mvwprintw( win, 0, 0, g_utf8_topleft );
+    mvwprintw( win, maxy - 1, 0, g_utf8_bottomleft );
+    mvwprintw( win, 0, maxx - 1, g_utf8_topright );
+    mvwprintw( win, maxy - 1, maxx - 1, g_utf8_bottomright );
+
+    for ( i = 1; i < ( maxy - 1 ); i++ )
+    {
+        mvwprintw( win, i, 0, g_utf8_vert );
+        mvwprintw( win, i, maxx - 1, g_utf8_vert );
+    }
+
+    for ( i = 1; i < ( maxx - 1 ); i++ )
+    {
+        mvwprintw( win, 0, i, g_utf8_horz );
+        mvwprintw( win, maxy - 1, i, g_utf8_horz );
+    }
+#endif
+}
+
 static int termwin_draw( termwin *twin )
 {
     if ( twin->damage_rect.end_col || twin->damage_rect.end_row )
@@ -398,7 +432,7 @@ static int termwin_draw( termwin *twin )
              ( endrow > maxy ) ||
              ( endcol > maxx ) )
         {
-            draw_borders( twin->win );
+            draw_border( twin, twin->win );
         }
 
         for ( row = twin->damage_rect.start_row; row < endrow; row++ )
