@@ -536,8 +536,10 @@ void termwin_resize( termwin *twin )
     int ret;
     int maxy = getmaxy( stdscr );
     int maxx = getmaxx( stdscr );
+    int lines = MAX( 4, maxy - 10 );
+    int columns = MAX( 4, maxx - 10 );
 
-    NCURSES_CHECK( ret, wresize, twin->win, maxy - 10, maxx - 10 );
+    NCURSES_CHECK( ret, wresize, twin->win, lines, columns );
 
     // Damage entire window.
     twin->damage_rect.start_row = 0;
