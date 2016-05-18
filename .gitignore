@@ -1,3 +1,8 @@
 _release/*
 _debug/*
-qtcreator/nvterm.creator.user
+qtcreator/cvterm.creator.user
+qtcreator/cvterm.config
+qtcreator/cvterm.creator
+qtcreator/cvterm.files
+qtcreator/cvterm.includes
+
