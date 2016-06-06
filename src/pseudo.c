@@ -498,8 +498,17 @@ int pty_release(const char *slavename)
      * the pseudo library, I'm assuming it is useful in some configurations.
      * The solution was to ignore errors on systems that don't allow the
      * following calls.
+     *
+     * chown is marked with __attribute__((warn_unused_result)), so use
+     * this pragma to tell the compiler to not warn.
      */
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-result"
+
     chown(slavename, (uid_t) 0, (gid_t) 0);
+
+#pragma GCC diagnostic pop
 
     chmod(slavename, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH);
 
