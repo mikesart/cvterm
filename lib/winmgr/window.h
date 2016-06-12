@@ -11,12 +11,17 @@ typedef struct window window;
 #define WF_VISIBLE      1
 
 // Standard window messages
-#define WM_CREATE       1
-#define WM_DESTROY      2
-#define WM_EXPOSE       3
-#define WM_CHAR         4
-#define WM_KEY          5
-#define WM_USER         1000
+enum messages
+{
+    WM_CREATE,
+    WM_DESTROY,
+    WM_EXPOSE,
+    WM_SETFOCUS,
+    WM_KILLFOCUS,
+    WM_CHAR,
+    WM_KEY,
+    WM_USER = 1000
+};
 
 // Modifier flags
 #define MOD_SHIFT       1
