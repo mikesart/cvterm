@@ -128,13 +128,13 @@ window *new_window(winmgr *wm, TickitWindow *tw, handler h, uint32_t flags)
     tickit_window_set_user(tw, w);
 
     // We want all these events from libtickit.
-    TickitBindFlags bind_flags = TICKIT_EV_KEY | TICKIT_EV_MOUSE |
+    TickitEventType event_type = TICKIT_EV_KEY | TICKIT_EV_MOUSE |
         TICKIT_EV_GEOMCHANGE | TICKIT_EV_EXPOSE | TICKIT_EV_FOCUS |
         TICKIT_EV_DESTROY;
 
     // Don't bother remembering the bind id. The event handler binding
     // gets cleaned up on tickit window destroy
-    tickit_window_bind_event(w->tw, bind_flags, 0, tickit_window_event_proc, w);
+    tickit_window_bind_event(w->tw, event_type, 0, tickit_window_event_proc, w);
 
     // Notify client
     handler_call(h, WM_CREATE, NULL);

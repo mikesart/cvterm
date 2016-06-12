@@ -38,13 +38,13 @@ typedef struct
     uint16_t unique;
 } handle_entry;
 
-typedef struct handle_table
+struct handle_table
 {
     handle_entry *entries;
     int count;
     int first;
     uint16_t unique;
-} handle_table;
+};
 
 static handle_table *s_table;
 

@@ -82,8 +82,7 @@ void message_shutdown()
 
     if (queue)
     {
-        queue_item *item;
-        while (item = queue->first)
+        for (queue_item *item = queue->first; item != NULL; item = queue->first)
         {
             queue->first = item->next;
             free(item);
@@ -194,4 +193,6 @@ uint32_t handler_call(handler h, int id, const void *data)
     {
         return m->proc(m->user, id, data);
     }
+
+    return 0;
 }
