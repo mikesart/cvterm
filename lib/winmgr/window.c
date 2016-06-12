@@ -46,10 +46,10 @@ int winmgr_init(const char *termtype, int fd_in, int fd_out)
     TickitTerm *tt = tickit_term_new_for_termtype(termtype);
     if (!tt)
         return 0;
-    tickit_term_await_started_msec(tt, 50);
 
     tickit_term_set_input_fd(tt, fd_in);
     tickit_term_set_output_fd(tt, fd_out);
+    tickit_term_await_started_msec(tt, 50);
     tickit_term_observe_sigwinch(tt, true);
     tickit_term_setctl_int(tt, TICKIT_TERMCTL_ALTSCREEN, 1);
     tickit_term_clear(tt);
