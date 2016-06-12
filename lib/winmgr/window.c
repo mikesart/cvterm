@@ -124,6 +124,9 @@ window *new_window(winmgr *wm, TickitWindow *tw, handler h, uint32_t flags)
     w->h = h;
     w->flags = flags;
 
+    // Set which window is bound to tw.
+    tickit_window_set_user(tw, w);
+
     // We want all these events from libtickit.
     TickitBindFlags bind_flags = TICKIT_EV_KEY | TICKIT_EV_MOUSE |
         TICKIT_EV_GEOMCHANGE | TICKIT_EV_EXPOSE | TICKIT_EV_FOCUS |
@@ -201,6 +204,27 @@ int handle_expose(window *w, TickitExposeEventInfo *info)
     return 1;
 }
 
+int handle_focus(window *w, TickitFocusEventInfo *info)
+{
+    message_data data;
+    memset(&data, 0, sizeof(data));
+    if (info->win)
+        data.focus_change.w = tickit_window_get_user(info->win);
+
+    switch (info->type)
+    {
+    case TICKIT_FOCUSEV_IN:
+        handler_call(w->h, WM_SETFOCUS, &data);
+        break;
+
+    case TICKIT_FOCUSEV_OUT:
+        handler_call(w->h, WM_KILLFOCUS, &data);
+        break;
+    }
+
+    return 1;
+}
+
 int tickit_window_event_proc(TickitWindow *tw, TickitEventType ev, void *info, void *user)
 {
     window *w = (window *)user;
@@ -237,11 +261,17 @@ int tickit_window_event_proc(TickitWindow *tw, TickitEventType ev, void *info, v
         return handle_expose(w, (TickitExposeEventInfo *)info);
     }
 
+    if (ev & TICKIT_EV_FOCUS)
+    {
+        return handle_focus(w, (TickitFocusEventInfo *)info);
+    }
+
     if (ev & TICKIT_EV_DESTROY)
     {
         // This event occurs when the ticket window is being freed.
         // Free our wrapping object.
         handler_call(w->h, WM_DESTROY, NULL);
+        tickit_window_set_user(tw, NULL);
         free(w);
         return 1;
     }

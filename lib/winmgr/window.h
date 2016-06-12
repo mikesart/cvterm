@@ -46,6 +46,11 @@ typedef union
     {
         rect rc;
     } expose;
+
+    struct
+    {
+        window *w;
+    } focus_change;
 } message_data;
 
 typedef struct

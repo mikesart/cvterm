@@ -172,8 +172,8 @@ handler handler_create(void *user, handler_proc proc)
 {
     message_handler *m = malloc(sizeof(message_handler));
     memset(m, 0, sizeof(*m));
-    m->proc = proc;
     m->user = user;
+    m->proc = proc;
     return handle_alloc(m);
 }
 
