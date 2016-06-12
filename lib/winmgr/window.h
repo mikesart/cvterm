@@ -13,9 +13,9 @@ typedef struct window window;
 // Standard window messages
 enum messages
 {
-    WM_CREATE,
+    WM_CREATE = 1,
     WM_DESTROY,
-    WM_EXPOSE,
+    WM_PAINT,
     WM_SETFOCUS,
     WM_KILLFOCUS,
     WM_CHAR,
@@ -45,7 +45,7 @@ typedef union
     struct
     {
         rect rc;
-    } expose;
+    } paint;
 
     struct
     {
@@ -65,6 +65,8 @@ window *winmgr_create_root_window(handler h);
 
 window *window_create(window *parent, const rect *rc, handler h, uint32_t flags);
 int window_destroy(window *w);
+void window_set_focus(window *w);
+void window_invalidate_rect(window *w, const rect *rc);
 
 void window_eraserect(window *w, const rect *rc);
 void window_set_cursor_pos(window *w, int x, int y);

@@ -100,7 +100,7 @@ window *winmgr_create_root_window(handler h)
 window *window_create(window *parent, const rect *rc, handler h, uint32_t flags)
 {
     TickitRect trc;
-    rect_to_ticketrect(rc, &trc);
+    rect_to_tickitrect(rc, &trc);
 
     TickitWindowFlags tflags = 0;
     if (!(flags & WF_VISIBLE))
@@ -156,6 +156,25 @@ int window_destroy(window *w)
     return 1;
 }
 
+void window_set_focus(window *w)
+{
+    tickit_window_take_focus(w->tw);
+}
+
+void window_invalidate_rect(window *w, const rect *rc)
+{
+    if (rc)
+    {
+        TickitRect trc;
+        rect_to_tickitrect(rc, &trc);
+        tickit_window_expose(w->tw, &trc);
+    }
+    else
+    {
+        tickit_window_expose(w->tw, NULL);
+    }
+}
+
 void window_set_cursor_pos(window *w, int x, int y)
 {
     tickit_renderbuffer_goto(w->rb, y, x);
@@ -164,7 +183,7 @@ void window_set_cursor_pos(window *w, int x, int y)
 void window_eraserect(window *w, const rect *rc)
 {
     TickitRect trc;
-    rect_to_ticketrect(rc, &trc);
+    rect_to_tickitrect(rc, &trc);
     tickit_renderbuffer_eraserect(w->rb, &trc);
 }
 
@@ -196,8 +215,8 @@ int handle_expose(window *w, TickitExposeEventInfo *info)
 
     message_data data;
     memset(&data, 0, sizeof(data));
-    ticketrect_to_rect(&info->rect, &data.expose.rc);
-    handler_call(w->h, WM_EXPOSE, &data);
+    tickitrect_to_rect(&info->rect, &data.paint.rc);
+    handler_call(w->h, WM_PAINT, &data);
 
     w->rb = NULL;
 
