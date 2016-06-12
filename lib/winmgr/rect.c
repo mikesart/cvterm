@@ -53,7 +53,7 @@ int rect_intersect(rect *result, rect *rc1, rect *rc2)
     result->right = rc1->right < rc2->right ? rc1->right : rc2->right;
     result->bottom = rc1->bottom < rc2->bottom ? rc1->bottom : rc2->bottom;
 
-    return rect_empty(result);
+    return !rect_empty(result);
 }
 
 int rect_empty(rect *rc)
