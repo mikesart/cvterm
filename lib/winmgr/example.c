@@ -12,17 +12,25 @@ typedef struct
 {
     window *w;
     handler h;
-    char greetings[32];
+    char greetings[128];
 } root;
 
 uint32_t root_proc(root *r, int id, const message_data *data)
 {
     switch (id)
     {
-    case WM_EXPOSE:
-        window_eraserect(r->w, &data->expose.rc);
+    case WM_PAINT:
+        window_eraserect(r->w, &data->paint.rc);
         window_set_cursor_pos(r->w, 0, 0);
         window_drawtext(r->w, r->greetings);
+        break;
+
+    case WM_CHAR:
+        if (strlen(r->greetings) < sizeof(r->greetings) - 1)
+        {
+            strcat(r->greetings, data->chr.utf8);
+            window_invalidate_rect(r->w, NULL);
+        }
         break;
     }
 
@@ -78,21 +86,33 @@ void breakhere() {}
 
 int main(int argc, char **argv)
 {
-#if 0
+#if 1
     char c;
     read(0, &c, 1);
     breakhere();
 #endif
 
-    winmgr_init(NULL, 0, 1);
+    //clog_init_path(0, "example.log");
+    clog_init_fd(0, 1);
+    clog_set_fmt(0, "%f(%F:%n): %l: %m\n");
+
+    if (!winmgr_init(NULL, 0, 1))
+    {
+        clog_error(CLOG(0), "winmgr_init. Check TERM=xterm");
+        clog_free(0);
+        return 1;
+    }
 
     root *r = root_create("hello world!");
+    window_set_focus(r->w);
 
     main_loop();
 
     root_destroy(r);
 
     winmgr_shutdown();
+
+    clog_free(0);
 
     return 0;
 }
