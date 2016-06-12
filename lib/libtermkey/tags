@@ -1,0 +1,377 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
+!_TAG_PROGRAM_VERSION	5.9~svn20110310	//
+BUILTMAN	Makefile	/^BUILTMAN=$(MANSOURCE:.3.sh=.3)$/;"	m
+CHARAT	driver-csi.c	331;"	d	file:
+CHARAT	driver-ti.c	375;"	d	file:
+CHARAT	termkey.c	114;"	d	file:
+CLEAR_KEY	t/12strpkey.c	10;"	d	file:
+CLEAR_KEY	t/20canon.c	10;"	d	file:
+CsiHandler	driver-csi.c	/^typedef TermKeyResult CsiHandler(TermKey *tk, TermKeyKey *key, int cmd, long *arg, int args);$/;"	t	file:
+DEMOS	Makefile	/^DEMOS=demo demo-async$/;"	m
+DEMO_OBJECTS	Makefile	/^DEMO_OBJECTS=$(DEMOS:=.lo)$/;"	m
+DISTDIR	Makefile	/^DISTDIR=libtermkey-$(VERSION)$/;"	m
+GUARD_TERMKEY_H_	termkey.h	6;"	d
+GUARD_TERMKEY_INTERNAL_H_	termkey-internal.h	2;"	d
+HTMLDIR	Makefile	/^HTMLDIR=html$/;"	m
+INCDIR	Makefile	/^INCDIR=$(PREFIX)\/include$/;"	m
+LIBDIR	Makefile	/^LIBDIR=$(PREFIX)\/lib$/;"	m
+LIBRARY	Makefile	/^LIBRARY=libtermkey.la$/;"	m
+LIBTOOL	Makefile	/^  LIBTOOL ?= glibtool$/;"	m
+LIBTOOL	Makefile	/^  LIBTOOL ?= libtool$/;"	m
+MAN3DIR	Makefile	/^MAN3DIR=$(MANDIR)\/man3$/;"	m
+MAN7DIR	Makefile	/^MAN7DIR=$(MANDIR)\/man7$/;"	m
+MANDIR	Makefile	/^MANDIR=$(PREFIX)\/share\/man$/;"	m
+MANSOURCE	Makefile	/^MANSOURCE=$(wildcard man\/*.3.sh)$/;"	m
+NCSIFUNCS	driver-csi.c	84;"	d	file:
+OBJECTS	Makefile	/^OBJECTS=termkey.lo driver-csi.lo driver-ti.lo$/;"	m
+PREFIX	Makefile	/^PREFIX=\/usr\/local$/;"	m
+TARBALL	Makefile	/^TARBALL=$(DISTDIR).tar.gz$/;"	m
+TERMKEY_CANON_DELBS	termkey.h	/^  TERMKEY_CANON_DELBS       = 1 << 1  \/* Del is converted to Backspace *\/$/;"	e	enum:__anon9
+TERMKEY_CANON_SPACESYMBOL	termkey.h	/^  TERMKEY_CANON_SPACESYMBOL = 1 << 0, \/* Space is symbolic rather than Unicode *\/$/;"	e	enum:__anon9
+TERMKEY_CHECK_VERSION	termkey.h	14;"	d
+TERMKEY_FLAG_CONVERTKP	termkey.h	/^  TERMKEY_FLAG_CONVERTKP   = 1 << 1, \/* Convert KP codes to regular keypresses *\/$/;"	e	enum:__anon8
+TERMKEY_FLAG_CTRLC	termkey.h	/^  TERMKEY_FLAG_CTRLC       = 1 << 6, \/* Allow Ctrl-C to be read as normal, disabling SIGINT *\/$/;"	e	enum:__anon8
+TERMKEY_FLAG_EINTR	termkey.h	/^  TERMKEY_FLAG_EINTR       = 1 << 7  \/* Return ERROR on signal (EINTR) rather than retry *\/$/;"	e	enum:__anon8
+TERMKEY_FLAG_NOINTERPRET	termkey.h	/^  TERMKEY_FLAG_NOINTERPRET = 1 << 0, \/* Do not interpret C0\/\/DEL codes if possible *\/$/;"	e	enum:__anon8
+TERMKEY_FLAG_NOTERMIOS	termkey.h	/^  TERMKEY_FLAG_NOTERMIOS   = 1 << 4, \/* Do not make initial termios calls on construction *\/$/;"	e	enum:__anon8
+TERMKEY_FLAG_RAW	termkey.h	/^  TERMKEY_FLAG_RAW         = 1 << 2, \/* Input is raw bytes, not UTF-8 *\/$/;"	e	enum:__anon8
+TERMKEY_FLAG_SPACESYMBOL	termkey.h	/^  TERMKEY_FLAG_SPACESYMBOL = 1 << 5, \/* Sets TERMKEY_CANON_SPACESYMBOL *\/$/;"	e	enum:__anon8
+TERMKEY_FLAG_UTF8	termkey.h	/^  TERMKEY_FLAG_UTF8        = 1 << 3, \/* Input is definitely UTF-8 *\/$/;"	e	enum:__anon8
+TERMKEY_FORMAT_ALTISMETA	termkey.h	/^  TERMKEY_FORMAT_ALTISMETA   = 1 << 2, \/* Meta- or M- instead of Alt- or A- *\/$/;"	e	enum:__anon10
+TERMKEY_FORMAT_CARETCTRL	termkey.h	/^  TERMKEY_FORMAT_CARETCTRL   = 1 << 1, \/* ^X instead of C-X *\/$/;"	e	enum:__anon10
+TERMKEY_FORMAT_LONGMOD	termkey.h	/^  TERMKEY_FORMAT_LONGMOD     = 1 << 0, \/* Shift-... instead of S-... *\/$/;"	e	enum:__anon10
+TERMKEY_FORMAT_LOWERMOD	termkey.h	/^  TERMKEY_FORMAT_LOWERMOD    = 1 << 5, \/* meta or m instead of Meta or M *\/$/;"	e	enum:__anon10
+TERMKEY_FORMAT_LOWERSPACE	termkey.h	/^  TERMKEY_FORMAT_LOWERSPACE  = 1 << 6, \/* page down instead of PageDown *\/$/;"	e	enum:__anon10
+TERMKEY_FORMAT_MOUSE_POS	termkey.h	/^  TERMKEY_FORMAT_MOUSE_POS   = 1 << 8  \/* Include mouse position if relevant; @ col,line *\/$/;"	e	enum:__anon10
+TERMKEY_FORMAT_SPACEMOD	termkey.h	/^  TERMKEY_FORMAT_SPACEMOD    = 1 << 4, \/* M Foo instead of M-Foo *\/$/;"	e	enum:__anon10
+TERMKEY_FORMAT_URWID	termkey.h	228;"	d
+TERMKEY_FORMAT_VIM	termkey.h	227;"	d
+TERMKEY_FORMAT_WRAPBRACKET	termkey.h	/^  TERMKEY_FORMAT_WRAPBRACKET = 1 << 3, \/* Wrap special keys in brackets like <Escape> *\/$/;"	e	enum:__anon10
+TERMKEY_KEYMOD_ALT	termkey.h	/^  TERMKEY_KEYMOD_ALT   = 1 << 1,$/;"	e	enum:__anon5
+TERMKEY_KEYMOD_CTRL	termkey.h	/^  TERMKEY_KEYMOD_CTRL  = 1 << 2$/;"	e	enum:__anon5
+TERMKEY_KEYMOD_SHIFT	termkey.h	/^  TERMKEY_KEYMOD_SHIFT = 1 << 0,$/;"	e	enum:__anon5
+TERMKEY_MOUSE_DRAG	termkey.h	/^  TERMKEY_MOUSE_DRAG,$/;"	e	enum:__anon4
+TERMKEY_MOUSE_PRESS	termkey.h	/^  TERMKEY_MOUSE_PRESS,$/;"	e	enum:__anon4
+TERMKEY_MOUSE_RELEASE	termkey.h	/^  TERMKEY_MOUSE_RELEASE$/;"	e	enum:__anon4
+TERMKEY_MOUSE_UNKNOWN	termkey.h	/^  TERMKEY_MOUSE_UNKNOWN,$/;"	e	enum:__anon4
+TERMKEY_N_SYMS	termkey.h	/^  TERMKEY_N_SYMS$/;"	e	enum:__anon1
+TERMKEY_RES_AGAIN	termkey.h	/^  TERMKEY_RES_AGAIN,$/;"	e	enum:__anon3
+TERMKEY_RES_EOF	termkey.h	/^  TERMKEY_RES_EOF,$/;"	e	enum:__anon3
+TERMKEY_RES_ERROR	termkey.h	/^  TERMKEY_RES_ERROR$/;"	e	enum:__anon3
+TERMKEY_RES_KEY	termkey.h	/^  TERMKEY_RES_KEY,$/;"	e	enum:__anon3
+TERMKEY_RES_NONE	termkey.h	/^  TERMKEY_RES_NONE,$/;"	e	enum:__anon3
+TERMKEY_SYM_BACKSPACE	termkey.h	/^  TERMKEY_SYM_BACKSPACE,$/;"	e	enum:__anon1
+TERMKEY_SYM_BEGIN	termkey.h	/^  TERMKEY_SYM_BEGIN,$/;"	e	enum:__anon1
+TERMKEY_SYM_CANCEL	termkey.h	/^  TERMKEY_SYM_CANCEL,$/;"	e	enum:__anon1
+TERMKEY_SYM_CLEAR	termkey.h	/^  TERMKEY_SYM_CLEAR,$/;"	e	enum:__anon1
+TERMKEY_SYM_CLOSE	termkey.h	/^  TERMKEY_SYM_CLOSE,$/;"	e	enum:__anon1
+TERMKEY_SYM_COMMAND	termkey.h	/^  TERMKEY_SYM_COMMAND,$/;"	e	enum:__anon1
+TERMKEY_SYM_COPY	termkey.h	/^  TERMKEY_SYM_COPY,$/;"	e	enum:__anon1
+TERMKEY_SYM_DEL	termkey.h	/^  TERMKEY_SYM_DEL,$/;"	e	enum:__anon1
+TERMKEY_SYM_DELETE	termkey.h	/^  TERMKEY_SYM_DELETE,$/;"	e	enum:__anon1
+TERMKEY_SYM_DOWN	termkey.h	/^  TERMKEY_SYM_DOWN,$/;"	e	enum:__anon1
+TERMKEY_SYM_END	termkey.h	/^  TERMKEY_SYM_END,$/;"	e	enum:__anon1
+TERMKEY_SYM_ENTER	termkey.h	/^  TERMKEY_SYM_ENTER,$/;"	e	enum:__anon1
+TERMKEY_SYM_ESCAPE	termkey.h	/^  TERMKEY_SYM_ESCAPE,$/;"	e	enum:__anon1
+TERMKEY_SYM_EXIT	termkey.h	/^  TERMKEY_SYM_EXIT,$/;"	e	enum:__anon1
+TERMKEY_SYM_FIND	termkey.h	/^  TERMKEY_SYM_FIND,$/;"	e	enum:__anon1
+TERMKEY_SYM_HELP	termkey.h	/^  TERMKEY_SYM_HELP,$/;"	e	enum:__anon1
+TERMKEY_SYM_HOME	termkey.h	/^  TERMKEY_SYM_HOME,$/;"	e	enum:__anon1
+TERMKEY_SYM_INSERT	termkey.h	/^  TERMKEY_SYM_INSERT,$/;"	e	enum:__anon1
+TERMKEY_SYM_KP0	termkey.h	/^  TERMKEY_SYM_KP0,$/;"	e	enum:__anon1
+TERMKEY_SYM_KP1	termkey.h	/^  TERMKEY_SYM_KP1,$/;"	e	enum:__anon1
+TERMKEY_SYM_KP2	termkey.h	/^  TERMKEY_SYM_KP2,$/;"	e	enum:__anon1
+TERMKEY_SYM_KP3	termkey.h	/^  TERMKEY_SYM_KP3,$/;"	e	enum:__anon1
+TERMKEY_SYM_KP4	termkey.h	/^  TERMKEY_SYM_KP4,$/;"	e	enum:__anon1
+TERMKEY_SYM_KP5	termkey.h	/^  TERMKEY_SYM_KP5,$/;"	e	enum:__anon1
+TERMKEY_SYM_KP6	termkey.h	/^  TERMKEY_SYM_KP6,$/;"	e	enum:__anon1
+TERMKEY_SYM_KP7	termkey.h	/^  TERMKEY_SYM_KP7,$/;"	e	enum:__anon1
+TERMKEY_SYM_KP8	termkey.h	/^  TERMKEY_SYM_KP8,$/;"	e	enum:__anon1
+TERMKEY_SYM_KP9	termkey.h	/^  TERMKEY_SYM_KP9,$/;"	e	enum:__anon1
+TERMKEY_SYM_KPCOMMA	termkey.h	/^  TERMKEY_SYM_KPCOMMA,$/;"	e	enum:__anon1
+TERMKEY_SYM_KPDIV	termkey.h	/^  TERMKEY_SYM_KPDIV,$/;"	e	enum:__anon1
+TERMKEY_SYM_KPENTER	termkey.h	/^  TERMKEY_SYM_KPENTER,$/;"	e	enum:__anon1
+TERMKEY_SYM_KPEQUALS	termkey.h	/^  TERMKEY_SYM_KPEQUALS,$/;"	e	enum:__anon1
+TERMKEY_SYM_KPMINUS	termkey.h	/^  TERMKEY_SYM_KPMINUS,$/;"	e	enum:__anon1
+TERMKEY_SYM_KPMULT	termkey.h	/^  TERMKEY_SYM_KPMULT,$/;"	e	enum:__anon1
+TERMKEY_SYM_KPPERIOD	termkey.h	/^  TERMKEY_SYM_KPPERIOD,$/;"	e	enum:__anon1
+TERMKEY_SYM_KPPLUS	termkey.h	/^  TERMKEY_SYM_KPPLUS,$/;"	e	enum:__anon1
+TERMKEY_SYM_LEFT	termkey.h	/^  TERMKEY_SYM_LEFT,$/;"	e	enum:__anon1
+TERMKEY_SYM_MARK	termkey.h	/^  TERMKEY_SYM_MARK,$/;"	e	enum:__anon1
+TERMKEY_SYM_MESSAGE	termkey.h	/^  TERMKEY_SYM_MESSAGE,$/;"	e	enum:__anon1
+TERMKEY_SYM_MOVE	termkey.h	/^  TERMKEY_SYM_MOVE,$/;"	e	enum:__anon1
+TERMKEY_SYM_NONE	termkey.h	/^  TERMKEY_SYM_NONE = 0,$/;"	e	enum:__anon1
+TERMKEY_SYM_OPEN	termkey.h	/^  TERMKEY_SYM_OPEN,$/;"	e	enum:__anon1
+TERMKEY_SYM_OPTIONS	termkey.h	/^  TERMKEY_SYM_OPTIONS,$/;"	e	enum:__anon1
+TERMKEY_SYM_PAGEDOWN	termkey.h	/^  TERMKEY_SYM_PAGEDOWN,$/;"	e	enum:__anon1
+TERMKEY_SYM_PAGEUP	termkey.h	/^  TERMKEY_SYM_PAGEUP,$/;"	e	enum:__anon1
+TERMKEY_SYM_PRINT	termkey.h	/^  TERMKEY_SYM_PRINT,$/;"	e	enum:__anon1
+TERMKEY_SYM_REDO	termkey.h	/^  TERMKEY_SYM_REDO,$/;"	e	enum:__anon1
+TERMKEY_SYM_REFERENCE	termkey.h	/^  TERMKEY_SYM_REFERENCE,$/;"	e	enum:__anon1
+TERMKEY_SYM_REFRESH	termkey.h	/^  TERMKEY_SYM_REFRESH,$/;"	e	enum:__anon1
+TERMKEY_SYM_REPLACE	termkey.h	/^  TERMKEY_SYM_REPLACE,$/;"	e	enum:__anon1
+TERMKEY_SYM_RESTART	termkey.h	/^  TERMKEY_SYM_RESTART,$/;"	e	enum:__anon1
+TERMKEY_SYM_RESUME	termkey.h	/^  TERMKEY_SYM_RESUME,$/;"	e	enum:__anon1
+TERMKEY_SYM_RIGHT	termkey.h	/^  TERMKEY_SYM_RIGHT,$/;"	e	enum:__anon1
+TERMKEY_SYM_SAVE	termkey.h	/^  TERMKEY_SYM_SAVE,$/;"	e	enum:__anon1
+TERMKEY_SYM_SELECT	termkey.h	/^  TERMKEY_SYM_SELECT,$/;"	e	enum:__anon1
+TERMKEY_SYM_SPACE	termkey.h	/^  TERMKEY_SYM_SPACE,$/;"	e	enum:__anon1
+TERMKEY_SYM_SUSPEND	termkey.h	/^  TERMKEY_SYM_SUSPEND,$/;"	e	enum:__anon1
+TERMKEY_SYM_TAB	termkey.h	/^  TERMKEY_SYM_TAB,$/;"	e	enum:__anon1
+TERMKEY_SYM_UNDO	termkey.h	/^  TERMKEY_SYM_UNDO,$/;"	e	enum:__anon1
+TERMKEY_SYM_UNKNOWN	termkey.h	/^  TERMKEY_SYM_UNKNOWN = -1,$/;"	e	enum:__anon1
+TERMKEY_SYM_UP	termkey.h	/^  TERMKEY_SYM_UP,$/;"	e	enum:__anon1
+TERMKEY_TYPE_FUNCTION	termkey.h	/^  TERMKEY_TYPE_FUNCTION,$/;"	e	enum:__anon2
+TERMKEY_TYPE_KEYSYM	termkey.h	/^  TERMKEY_TYPE_KEYSYM,$/;"	e	enum:__anon2
+TERMKEY_TYPE_MODEREPORT	termkey.h	/^  TERMKEY_TYPE_MODEREPORT,$/;"	e	enum:__anon2
+TERMKEY_TYPE_MOUSE	termkey.h	/^  TERMKEY_TYPE_MOUSE,$/;"	e	enum:__anon2
+TERMKEY_TYPE_POSITION	termkey.h	/^  TERMKEY_TYPE_POSITION,$/;"	e	enum:__anon2
+TERMKEY_TYPE_UNICODE	termkey.h	/^  TERMKEY_TYPE_UNICODE,$/;"	e	enum:__anon2
+TERMKEY_TYPE_UNKNOWN_CSI	termkey.h	/^  TERMKEY_TYPE_UNKNOWN_CSI = -1$/;"	e	enum:__anon2
+TERMKEY_VERSION_MAJOR	termkey.h	11;"	d
+TERMKEY_VERSION_MINOR	termkey.h	12;"	d
+TESTFILES	Makefile	/^TESTFILES=$(TESTSOURCES:.c=.t)$/;"	m
+TESTSOURCES	Makefile	/^TESTSOURCES=$(wildcard t\/[0-9]*.c)$/;"	m
+TYPE_ARR	driver-ti.c	/^  TYPE_ARR,$/;"	e	enum:__anon12	file:
+TYPE_KEY	driver-ti.c	/^  TYPE_KEY,$/;"	e	enum:__anon12	file:
+TYPE_MOUSE	driver-ti.c	/^  TYPE_MOUSE,$/;"	e	enum:__anon12	file:
+TermKey	termkey-internal.h	/^struct TermKey {$/;"	s
+TermKey	termkey.h	/^typedef struct TermKey TermKey;$/;"	t	typeref:struct:TermKey
+TermKeyCsi	driver-csi.c	/^} TermKeyCsi;$/;"	t	typeref:struct:__anon16	file:
+TermKeyDriver	termkey-internal.h	/^struct TermKeyDriver$/;"	s
+TermKeyDriverNode	termkey-internal.h	/^struct TermKeyDriverNode {$/;"	s
+TermKeyFormat	termkey.h	/^} TermKeyFormat;$/;"	t	typeref:enum:__anon10
+TermKeyKey	termkey.h	/^} TermKeyKey;$/;"	t	typeref:struct:__anon6
+TermKeyMouseEvent	termkey.h	/^} TermKeyMouseEvent;$/;"	t	typeref:enum:__anon4
+TermKeyResult	termkey.h	/^} TermKeyResult;$/;"	t	typeref:enum:__anon3
+TermKeySym	termkey.h	/^} TermKeySym;$/;"	t	typeref:enum:__anon1
+TermKeyTI	driver-ti.c	/^} TermKeyTI;$/;"	t	typeref:struct:__anon13	file:
+TermKeyType	termkey.h	/^} TermKeyType;$/;"	t	typeref:enum:__anon2
+UTF8_INVALID	termkey.c	654;"	d	file:
+VERSION	Makefile	/^VERSION=$(VERSION_MAJOR).$(VERSION_MINOR)$/;"	m
+VERSION_AGE	Makefile	/^VERSION_AGE=12$/;"	m
+VERSION_CURRENT	Makefile	/^VERSION_CURRENT=13$/;"	m
+VERSION_MAJOR	Makefile	/^VERSION_MAJOR=0$/;"	m
+VERSION_MINOR	Makefile	/^VERSION_MINOR=18$/;"	m
+VERSION_REVISION	Makefile	/^VERSION_REVISION=0$/;"	m
+_XOPEN_SOURCE	demo-async.c	2;"	d	file:
+_XOPEN_SOURCE	demo.c	2;"	d	file:
+_XOPEN_SOURCE	driver-ti.c	2;"	d	file:
+_exit_status	t/taplib.c	/^static int _exit_status = 0;$/;"	v	file:
+alt	termkey.c	/^  const char *shift, *alt, *ctrl;$/;"	m	struct:modnames	file:
+arr	driver-ti.c	/^  struct trie_node *arr[]; \/* dynamic size at allocation time *\/$/;"	m	struct:trie_node_arr	typeref:struct:trie_node_arr::trie_node	file:
+buffcount	termkey-internal.h	/^  size_t buffcount; \/\/ NUMBER of entires valid in buffer$/;"	m	struct:TermKey
+buffer	termkey-internal.h	/^  unsigned char *buffer;$/;"	m	struct:TermKey
+buffsize	termkey-internal.h	/^  size_t buffsize; \/\/ Total malloc'ed size$/;"	m	struct:TermKey
+buffstart	termkey-internal.h	/^  size_t buffstart; \/\/ First offset in buffer$/;"	m	struct:TermKey
+buttons	driver-ti.c	14;"	d	file:
+c0	termkey-internal.h	/^  struct keyinfo c0[32];$/;"	m	struct:TermKey	typeref:struct:TermKey::keyinfo
+canonflags	termkey-internal.h	/^  int    canonflags;$/;"	m	struct:TermKey
+code	termkey.h	/^  } code;$/;"	m	struct:__anon6	typeref:union:__anon6::__anon7
+codepoint	termkey.h	/^    long       codepoint; \/* TERMKEY_TYPE_UNICODE *\/$/;"	m	union:__anon6::__anon7
+compress_trie	driver-ti.c	/^static struct trie_node *compress_trie(struct trie_node *n)$/;"	f	file:
+csi_handlers	driver-csi.c	/^static CsiHandler *csi_handlers[64];$/;"	v	file:
+csi_ss3s	driver-csi.c	/^static struct keyinfo csi_ss3s[64];$/;"	v	typeref:struct:keyinfo	file:
+csifuncs	driver-csi.c	/^static struct keyinfo csifuncs[35]; \/* This value must be increased if more CSI function keys are added *\/$/;"	v	typeref:struct:keyinfo	file:
+ctrl	termkey.c	/^  const char *shift, *alt, *ctrl;$/;"	m	struct:modnames	file:
+diag	t/taplib.c	/^void diag(char *fmt, ...)$/;"	f
+driver	termkey-internal.h	/^  struct TermKeyDriver     *driver;$/;"	m	struct:TermKeyDriverNode	typeref:struct:TermKeyDriverNode::TermKeyDriver
+drivers	termkey-internal.h	/^  struct TermKeyDriverNode *drivers;$/;"	m	struct:TermKey	typeref:struct:TermKey::TermKeyDriverNode
+drivers	termkey.c	/^static struct TermKeyDriver *drivers[] = {$/;"	v	typeref:struct:TermKeyDriver	file:
+eat_bytes	termkey.c	/^static void eat_bytes(TermKey *tk, size_t count)$/;"	f	file:
+emit_codepoint	termkey-internal.h	/^    void (*emit_codepoint)(TermKey *tk, long codepoint, TermKeyKey *key);$/;"	m	struct:TermKey::__anon11
+emit_codepoint	termkey.c	/^static void emit_codepoint(TermKey *tk, long codepoint, TermKeyKey *key)$/;"	f	file:
+exit_status	t/taplib.c	/^int exit_status(void)$/;"	f
+fail	t/taplib.c	/^void fail(char *name)$/;"	f
+fd	termkey-internal.h	/^  int    fd;$/;"	m	struct:TermKey
+fill_utf8	termkey.c	/^static void fill_utf8(TermKeyKey *key)$/;"	f	file:
+flags	termkey-internal.h	/^  int    flags;$/;"	m	struct:TermKey
+free_driver	driver-csi.c	/^static void free_driver(void *info)$/;"	f	file:
+free_driver	driver-ti.c	/^static void free_driver(void *info)$/;"	f	file:
+free_driver	termkey-internal.h	/^  void           (*free_driver)(void *info);$/;"	m	struct:TermKeyDriver
+free_trie	driver-ti.c	/^static void free_trie(struct trie_node *n)$/;"	f	file:
+func_exec_program	demo	/^func_exec_program ()$/;"	f
+func_exec_program	demo-async	/^func_exec_program ()$/;"	f
+func_exec_program_core	demo	/^func_exec_program_core ()$/;"	f
+func_exec_program_core	demo-async	/^func_exec_program_core ()$/;"	f
+func_fallback_echo	demo	/^func_fallback_echo ()$/;"	f
+func_fallback_echo	demo-async	/^func_fallback_echo ()$/;"	f
+func_lt_dump_args	demo	/^func_lt_dump_args ()$/;"	f
+func_lt_dump_args	demo-async	/^func_lt_dump_args ()$/;"	f
+func_parse_lt_options	demo	/^func_parse_lt_options ()$/;"	f
+func_parse_lt_options	demo-async	/^func_parse_lt_options ()$/;"	f
+funcname	driver-ti.c	/^  const char *funcname;$/;"	m	struct:__anon14	file:
+funcname2keysym	driver-ti.c	/^static int funcname2keysym(const char *funcname, TermKeyType *typep, TermKeySym *symp, int *modmaskp, int *modsetp)$/;"	f	file:
+funcs	driver-ti.c	/^} funcs[] =$/;"	v	typeref:struct:__anon14	file:
+handle_csi_R	driver-csi.c	/^static TermKeyResult handle_csi_R(TermKey *tk, TermKeyKey *key, int cmd, long *arg, int args)$/;"	f	file:
+handle_csi_m	driver-csi.c	/^static TermKeyResult handle_csi_m(TermKey *tk, TermKeyKey *key, int cmd, long *arg, int args)$/;"	f	file:
+handle_csi_ss3_full	driver-csi.c	/^static TermKeyResult handle_csi_ss3_full(TermKey *tk, TermKeyKey *key, int cmd, long *arg, int args)$/;"	f	file:
+handle_csi_u	driver-csi.c	/^static TermKeyResult handle_csi_u(TermKey *tk, TermKeyKey *key, int cmd, long *arg, int args)$/;"	f	file:
+handle_csi_y	driver-csi.c	/^static TermKeyResult handle_csi_y(TermKey *tk, TermKeyKey *key, int cmd, long *arg, int args)$/;"	f	file:
+handle_csifunc	driver-csi.c	/^static TermKeyResult handle_csifunc(TermKey *tk, TermKeyKey *key, int cmd, long *arg, int args)$/;"	f	file:
+hightide	termkey-internal.h	/^  size_t hightide; \/* Position beyond buffstart at which peekkey() should next start$/;"	m	struct:TermKey
+info	termkey-internal.h	/^  void                      *info;$/;"	m	struct:TermKeyDriverNode
+insert_seq	driver-ti.c	/^static int insert_seq(TermKeyTI *ti, const char *seq, struct trie_node *node)$/;"	f	file:
+is_closed	termkey-internal.h	/^  char   is_closed;$/;"	m	struct:TermKey
+is_int	t/taplib.c	/^void is_int(int got, int expect, char *name)$/;"	f
+is_started	termkey-internal.h	/^  char   is_started;$/;"	m	struct:TermKey
+is_str	t/taplib.c	/^void is_str(const char *got, const char *expect, char *name)$/;"	f
+key	driver-ti.c	/^  struct keyinfo key;$/;"	m	struct:trie_node_key	typeref:struct:trie_node_key::keyinfo	file:
+key_timer	demo-glib.c	/^static gboolean key_timer(gpointer data)$/;"	f	file:
+keyinfo	termkey-internal.h	/^struct keyinfo {$/;"	s
+keyinfo_initialised	driver-csi.c	/^static int keyinfo_initialised = 0;$/;"	v	file:
+keynames	termkey-internal.h	/^  const char **keynames;$/;"	m	struct:TermKey
+keynames	termkey.c	/^} keynames[] = {$/;"	v	typeref:struct:__anon15	file:
+load_terminfo	driver-ti.c	/^static int load_terminfo(TermKeyTI *ti, const char *term)$/;"	f	file:
+lookup_next	driver-ti.c	/^static struct trie_node *lookup_next(struct trie_node *n, unsigned char b)$/;"	f	file:
+main	demo-async.c	/^int main(int argc, char *argv[])$/;"	f
+main	demo-glib.c	/^int main(int argc, char *argv[])$/;"	f
+main	demo.c	/^int main(int argc, char *argv[])$/;"	f
+main	t/01base.c	/^int main(int argc, char *argv[])$/;"	f
+main	t/02getkey.c	/^int main(int argc, char *argv[])$/;"	f
+main	t/03utf8.c	/^int main(int argc, char *argv[])$/;"	f
+main	t/04flags.c	/^int main(int argc, char *argv[])$/;"	f
+main	t/05read.c	/^int main(int argc, char *argv[])$/;"	f
+main	t/06buffer.c	/^int main(int argc, char *argv[])$/;"	f
+main	t/10keyname.c	/^int main(int argc, char *argv[])$/;"	f
+main	t/11strfkey.c	/^int main(int argc, char *argv[])$/;"	f
+main	t/12strpkey.c	/^int main(int argc, char *argv[])$/;"	f
+main	t/13cmpkey.c	/^int main(int argc, char *argv[])$/;"	f
+main	t/20canon.c	/^int main(int argc, char *argv[])$/;"	f
+main	t/30mouse.c	/^int main(int argc, char *argv[])$/;"	f
+main	t/31position.c	/^int main(int argc, char *argv[])$/;"	f
+main	t/32modereport.c	/^int main(int argc, char *argv[])$/;"	f
+main	t/39csi.c	/^int main(int argc, char *argv[])$/;"	f
+max	driver-ti.c	/^  unsigned char min, max; \/* INCLUSIVE endpoints of the extent range *\/$/;"	m	struct:trie_node_arr	file:
+method	termkey-internal.h	/^  } method;$/;"	m	struct:TermKey	typeref:struct:TermKey::__anon11
+min	driver-ti.c	/^  unsigned char min, max; \/* INCLUSIVE endpoints of the extent range *\/$/;"	m	struct:trie_node_arr	file:
+modifier_mask	termkey-internal.h	/^  int modifier_mask;$/;"	m	struct:keyinfo
+modifier_set	termkey-internal.h	/^  int modifier_set;$/;"	m	struct:keyinfo
+modifiers	termkey.h	/^  int modifiers;$/;"	m	struct:__anon6
+modnames	termkey.c	/^modnames[] = {$/;"	v	typeref:struct:modnames	file:
+modnames	termkey.c	/^static struct modnames {$/;"	s	file:
+mods	driver-ti.c	/^  int mods;$/;"	m	struct:__anon14	file:
+mouse	termkey.h	/^    char       mouse[4];  \/* TERMKEY_TYPE_MOUSE *\/$/;"	m	union:__anon6::__anon7
+name	termkey-internal.h	/^  const char      *name;$/;"	m	struct:TermKeyDriver
+name	termkey.c	/^  const char *name;$/;"	m	struct:__anon15	file:
+new_driver	driver-csi.c	/^static void *new_driver(TermKey *tk, const char *term)$/;"	f	file:
+new_driver	driver-ti.c	/^static void *new_driver(TermKey *tk, const char *term)$/;"	f	file:
+new_driver	termkey-internal.h	/^  void          *(*new_driver)(TermKey *tk, const char *term);$/;"	m	struct:TermKeyDriver
+new_node_arr	driver-ti.c	/^static struct trie_node *new_node_arr(unsigned char min, unsigned char max)$/;"	f	file:
+new_node_key	driver-ti.c	/^static struct trie_node *new_node_key(TermKeyType type, TermKeySym sym, int modmask, int modset)$/;"	f	file:
+next	termkey-internal.h	/^  struct TermKeyDriverNode *next;$/;"	m	struct:TermKeyDriverNode	typeref:struct:TermKeyDriverNode::TermKeyDriverNode
+nexttest	t/taplib.c	/^static int nexttest = 1;$/;"	v	file:
+nkeynames	termkey-internal.h	/^  int  nkeynames;$/;"	m	struct:TermKey
+number	termkey.h	/^    int        number;    \/* TERMKEY_TYPE_FUNCTION *\/$/;"	m	union:__anon6::__anon7
+ok	t/taplib.c	/^void ok(int cmp, char *name)$/;"	f
+on_key	demo-async.c	/^static void on_key(TermKey *tk, TermKeyKey *key)$/;"	f	file:
+on_key	demo-glib.c	/^static void on_key(TermKey *tk, TermKeyKey *key)$/;"	f	file:
+parse_csi	driver-csi.c	/^static TermKeyResult parse_csi(TermKey *tk, size_t introlen, size_t *csi_len, long args[], size_t *nargs, unsigned long *commandp)$/;"	f	file:
+parse_utf8	termkey.c	/^static TermKeyResult parse_utf8(const unsigned char *bytes, size_t len, long *cp, size_t *nbytep)$/;"	f	file:
+pass	t/taplib.c	/^void pass(char *name)$/;"	f
+peekkey	driver-csi.c	/^static TermKeyResult peekkey(TermKey *tk, void *info, TermKeyKey *key, int force, size_t *nbytep)$/;"	f	file:
+peekkey	driver-ti.c	/^static TermKeyResult peekkey(TermKey *tk, void *info, TermKeyKey *key, int force, size_t *nbytep)$/;"	f	file:
+peekkey	termkey-internal.h	/^  TermKeyResult (*peekkey)(TermKey *tk, void *info, TermKeyKey *key, int force, size_t *nbytes);$/;"	m	struct:TermKeyDriver
+peekkey	termkey.c	/^static TermKeyResult peekkey(TermKey *tk, TermKeyKey *key, int force, size_t *nbytep)$/;"	f	file:
+peekkey_csi	driver-csi.c	/^static TermKeyResult peekkey_csi(TermKey *tk, TermKeyCsi *csi, size_t introlen, TermKeyKey *key, int force, size_t *nbytep)$/;"	f	file:
+peekkey_mouse	termkey-internal.h	/^    TermKeyResult (*peekkey_mouse)(TermKey *tk, TermKeyKey *key, size_t *nbytes);$/;"	m	struct:TermKey::__anon11
+peekkey_mouse	termkey.c	/^static TermKeyResult peekkey_mouse(TermKey *tk, TermKeyKey *key, size_t *nbytep)$/;"	f	file:
+peekkey_simple	termkey-internal.h	/^    TermKeyResult (*peekkey_simple)(TermKey *tk, TermKeyKey *key, int force, size_t *nbytes);$/;"	m	struct:TermKey::__anon11
+peekkey_simple	termkey.c	/^static TermKeyResult peekkey_simple(TermKey *tk, TermKeyKey *key, int force, size_t *nbytep)$/;"	f	file:
+peekkey_ss3	driver-csi.c	/^static TermKeyResult peekkey_ss3(TermKey *tk, TermKeyCsi *csi, size_t introlen, TermKeyKey *key, int force, size_t *nbytep)$/;"	f	file:
+pkgconfig	Makefile	/^pkgconfig = $(shell PKG_CONFIG_PATH=$(PKG_CONFIG_PATH) pkg-config $(1))$/;"	m
+plan_tests	t/taplib.c	/^void plan_tests(int n)$/;"	f
+print_buffer	termkey.c	/^static void print_buffer(TermKey *tk)$/;"	f	file:
+print_key	termkey.c	/^static void print_key(TermKey *tk, TermKeyKey *key)$/;"	f	file:
+register_c0	termkey.c	/^static TermKeySym register_c0(TermKey *tk, TermKeySym sym, unsigned char ctrl, const char *name)$/;"	f	file:
+register_c0_full	termkey.c	/^static TermKeySym register_c0_full(TermKey *tk, TermKeySym sym, int modifier_set, int modifier_mask, unsigned char ctrl, const char *name)$/;"	f	file:
+register_csi_ss3	driver-csi.c	/^static void register_csi_ss3(TermKeyType type, TermKeySym sym, unsigned char cmd)$/;"	f	file:
+register_csi_ss3_full	driver-csi.c	/^static void register_csi_ss3_full(TermKeyType type, TermKeySym sym, int modifier_set, int modifier_mask, unsigned char cmd)$/;"	f	file:
+register_csifunc	driver-csi.c	/^static void register_csifunc(TermKeyType type, TermKeySym sym, int number)$/;"	f	file:
+register_keys	driver-csi.c	/^static int register_keys(void)$/;"	f	file:
+register_ss3kpalt	driver-csi.c	/^static void register_ss3kpalt(TermKeyType type, TermKeySym sym, unsigned char cmd, char kpalt)$/;"	f	file:
+res2str	termkey.c	/^static const char *res2str(TermKeyResult res)$/;"	f	file:
+restore_termios	termkey-internal.h	/^  struct termios restore_termios;$/;"	m	struct:TermKey	typeref:struct:TermKey::termios
+restore_termios_valid	termkey-internal.h	/^  char restore_termios_valid;$/;"	m	struct:TermKey
+root	driver-ti.c	/^  struct trie_node *root;$/;"	m	struct:__anon13	typeref:struct:__anon13::trie_node	file:
+shift	termkey.c	/^  const char *shift, *alt, *ctrl;$/;"	m	struct:modnames	file:
+snprint_cameltospaces	termkey.c	/^static int snprint_cameltospaces(char *str, size_t size, const char *src)$/;"	f	file:
+ss3_kpalts	driver-csi.c	/^static char ss3_kpalts[64];$/;"	v	file:
+ss3s	driver-csi.c	/^static struct keyinfo ss3s[64];$/;"	v	typeref:struct:keyinfo	file:
+start_driver	driver-ti.c	/^static int start_driver(TermKey *tk, void *info)$/;"	f	file:
+start_driver	termkey-internal.h	/^  int            (*start_driver)(TermKey *tk, void *info);$/;"	m	struct:TermKeyDriver
+start_string	driver-ti.c	/^  char *start_string;$/;"	m	struct:__anon13	file:
+stdin_io	demo-glib.c	/^static gboolean stdin_io(GIOChannel *source, GIOCondition condition, gpointer data)$/;"	f	file:
+stop_driver	driver-ti.c	/^static int stop_driver(TermKey *tk, void *info)$/;"	f	file:
+stop_driver	termkey-internal.h	/^  int            (*stop_driver)(TermKey *tk, void *info);$/;"	m	struct:TermKeyDriver
+stop_string	driver-ti.c	/^  char *stop_string;$/;"	m	struct:__anon13	file:
+strcaseeq	termkey.c	13;"	d	file:
+strpncmp_camel	termkey.c	/^static int strpncmp_camel(const char **strp, const char **strcamelp, size_t n)$/;"	f	file:
+sym	driver-ti.c	/^  TermKeySym sym;$/;"	m	struct:__anon14	file:
+sym	termkey-internal.h	/^  TermKeySym sym;$/;"	m	struct:keyinfo
+sym	termkey.c	/^  TermKeySym sym;$/;"	m	struct:__anon15	file:
+sym	termkey.h	/^    TermKeySym sym;       \/* TERMKEY_TYPE_KEYSYM *\/$/;"	m	union:__anon6::__anon7
+termkey_advisereadable	termkey.c	/^TermKeyResult termkey_advisereadable(TermKey *tk)$/;"	f
+termkey_alloc	termkey.c	/^static TermKey *termkey_alloc(void)$/;"	f	file:
+termkey_canonicalise	termkey.c	/^void termkey_canonicalise(TermKey *tk, TermKeyKey *key)$/;"	f
+termkey_check_version	termkey.c	/^void termkey_check_version(int major, int minor)$/;"	f
+termkey_destroy	termkey.c	/^void termkey_destroy(TermKey *tk)$/;"	f
+termkey_driver_csi	driver-csi.c	/^struct TermKeyDriver termkey_driver_csi = {$/;"	v	typeref:struct:TermKeyDriver
+termkey_driver_ti	driver-ti.c	/^struct TermKeyDriver termkey_driver_ti = {$/;"	v	typeref:struct:TermKeyDriver
+termkey_free	termkey.c	/^void termkey_free(TermKey *tk)$/;"	f
+termkey_get_buffer_remaining	termkey.c	/^size_t termkey_get_buffer_remaining(TermKey *tk)$/;"	f
+termkey_get_buffer_size	termkey.c	/^size_t termkey_get_buffer_size(TermKey *tk)$/;"	f
+termkey_get_canonflags	termkey.c	/^int termkey_get_canonflags(TermKey *tk)$/;"	f
+termkey_get_fd	termkey.c	/^int termkey_get_fd(TermKey *tk)$/;"	f
+termkey_get_flags	termkey.c	/^int termkey_get_flags(TermKey *tk)$/;"	f
+termkey_get_keyname	termkey.c	/^const char *termkey_get_keyname(TermKey *tk, TermKeySym sym)$/;"	f
+termkey_get_waittime	termkey.c	/^int termkey_get_waittime(TermKey *tk)$/;"	f
+termkey_getkey	termkey.c	/^TermKeyResult termkey_getkey(TermKey *tk, TermKeyKey *key)$/;"	f
+termkey_getkey_force	termkey.c	/^TermKeyResult termkey_getkey_force(TermKey *tk, TermKeyKey *key)$/;"	f
+termkey_init	termkey.c	/^static int termkey_init(TermKey *tk, const char *term)$/;"	f	file:
+termkey_interpret_csi	driver-csi.c	/^TermKeyResult termkey_interpret_csi(TermKey *tk, const TermKeyKey *key, long args[], size_t *nargs, unsigned long *cmd)$/;"	f
+termkey_interpret_modereport	driver-csi.c	/^TermKeyResult termkey_interpret_modereport(TermKey *tk, const TermKeyKey *key, int *initial, int *mode, int *value)$/;"	f
+termkey_interpret_mouse	driver-csi.c	/^TermKeyResult termkey_interpret_mouse(TermKey *tk, const TermKeyKey *key, TermKeyMouseEvent *event, int *button, int *line, int *col)$/;"	f
+termkey_interpret_position	driver-csi.c	/^TermKeyResult termkey_interpret_position(TermKey *tk, const TermKeyKey *key, int *line, int *col)$/;"	f
+termkey_is_started	termkey.c	/^int termkey_is_started(TermKey *tk)$/;"	f
+termkey_key_get_linecol	termkey-internal.h	/^static inline void termkey_key_get_linecol(const TermKeyKey *key, int *line, int *col)$/;"	f
+termkey_key_set_linecol	termkey-internal.h	/^static inline void termkey_key_set_linecol(TermKeyKey *key, int line, int col)$/;"	f
+termkey_keycmp	termkey.c	/^int termkey_keycmp(TermKey *tk, const TermKeyKey *key1p, const TermKeyKey *key2p)$/;"	f
+termkey_keyname2sym	termkey.c	/^TermKeySym termkey_keyname2sym(TermKey *tk, const char *keyname)$/;"	f
+termkey_lookup_keyname	termkey.c	/^const char *termkey_lookup_keyname(TermKey *tk, const char *str, TermKeySym *sym)$/;"	f
+termkey_lookup_keyname_format	termkey.c	/^static const char *termkey_lookup_keyname_format(TermKey *tk, const char *str, TermKeySym *sym, TermKeyFormat format)$/;"	f	file:
+termkey_new	termkey.c	/^TermKey *termkey_new(int fd, int flags)$/;"	f
+termkey_new_abstract	termkey.c	/^TermKey *termkey_new_abstract(const char *term, int flags)$/;"	f
+termkey_push_bytes	termkey.c	/^size_t termkey_push_bytes(TermKey *tk, const char *bytes, size_t len)$/;"	f
+termkey_register_keyname	termkey.c	/^TermKeySym termkey_register_keyname(TermKey *tk, TermKeySym sym, const char *name)$/;"	f
+termkey_set_buffer_size	termkey.c	/^int termkey_set_buffer_size(TermKey *tk, size_t size)$/;"	f
+termkey_set_canonflags	termkey.c	/^void termkey_set_canonflags(TermKey *tk, int flags)$/;"	f
+termkey_set_flags	termkey.c	/^void termkey_set_flags(TermKey *tk, int newflags)$/;"	f
+termkey_set_waittime	termkey.c	/^void termkey_set_waittime(TermKey *tk, int msec)$/;"	f
+termkey_snprint_key	termkey.c	/^size_t termkey_snprint_key(TermKey *tk, char *buffer, size_t len, TermKeyKey *key, TermKeyFormat format)$/;"	f
+termkey_start	termkey.c	/^int termkey_start(TermKey *tk)$/;"	f
+termkey_stop	termkey.c	/^int termkey_stop(TermKey *tk)$/;"	f
+termkey_strfkey	termkey.c	/^size_t termkey_strfkey(TermKey *tk, char *buffer, size_t len, TermKeyKey *key, TermKeyFormat format)$/;"	f
+termkey_strpkey	termkey.c	/^const char *termkey_strpkey(TermKey *tk, const char *str, TermKeyKey *key, TermKeyFormat format)$/;"	f
+termkey_waitkey	termkey.c	/^TermKeyResult termkey_waitkey(TermKey *tk, TermKeyKey *key)$/;"	f
+timeout_id	demo-glib.c	/^static int timeout_id;$/;"	v	file:
+tk	demo-glib.c	/^static TermKey *tk;$/;"	v	file:
+tk	driver-csi.c	/^  TermKey *tk;$/;"	m	struct:__anon16	file:
+tk	driver-ti.c	/^  TermKey *tk;$/;"	m	struct:__anon13	file:
+trie_node	driver-ti.c	/^struct trie_node {$/;"	s	file:
+trie_node_arr	driver-ti.c	/^struct trie_node_arr {$/;"	s	file:
+trie_node_key	driver-ti.c	/^struct trie_node_key {$/;"	s	file:
+trie_nodetype	driver-ti.c	/^} trie_nodetype;$/;"	t	typeref:enum:__anon12	file:
+type	driver-ti.c	/^  TermKeyType type;$/;"	m	struct:__anon14	file:
+type	driver-ti.c	/^  trie_nodetype type;$/;"	m	struct:trie_node	file:
+type	driver-ti.c	/^  trie_nodetype type;$/;"	m	struct:trie_node_arr	file:
+type	driver-ti.c	/^  trie_nodetype type;$/;"	m	struct:trie_node_key	file:
+type	termkey-internal.h	/^  TermKeyType type;$/;"	m	struct:keyinfo
+type	termkey.h	/^  TermKeyType type;$/;"	m	struct:__anon6
+utf8	termkey.h	/^  char utf8[7];$/;"	m	struct:__anon6
+utf8_seqlen	termkey.c	/^static inline unsigned int utf8_seqlen(long codepoint)$/;"	f	file:
+waittime	termkey-internal.h	/^  int waittime; \/\/ msec$/;"	m	struct:TermKey
