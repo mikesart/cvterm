@@ -1,5 +1,7 @@
+src/*.o
+examples/*.o
 *.lo
 *.la
 .libs
 t/*.t
-RE:examples/demo-[^.]+
+examples/demo-[^.]*
