@@ -67,7 +67,7 @@ int rect_equal(rect *rc1, rect *rc2)
         rc1->right == rc2->right && rc1->bottom == rc2->bottom);
 }
 
-void rect_to_ticketrect(const rect *rc, TickitRect *trc)
+void rect_to_tickitrect(const rect *rc, TickitRect *trc)
 {
     trc->top = rc->top;
     trc->left = rc->left;
@@ -75,7 +75,7 @@ void rect_to_ticketrect(const rect *rc, TickitRect *trc)
     trc->cols = rc->right - rc->left;
 }
 
-void ticketrect_to_rect(const TickitRect *trc, rect *rc)
+void tickitrect_to_rect(const TickitRect *trc, rect *rc)
 {
     rc->left = trc->left;
     rc->top = trc->top;
