@@ -1,5 +1,6 @@
 _release/*
 _debug/*
+cvterm.log
 qtcreator/cvterm.creator.user
 qtcreator/cvterm.config
 qtcreator/cvterm.creator
