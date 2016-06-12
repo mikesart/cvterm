@@ -35,6 +35,7 @@ struct TickitWindow {
   bool is_focused;
   bool steal_input;
   bool focus_child_notify;
+  void *user;
 
   struct TickitEventHook *hooks;
 };
@@ -328,6 +329,16 @@ void tickit_window_destroy(TickitWindow *win)
   }
 
   free(win);
+}
+
+void tickit_window_set_user(TickitWindow *win, void *user)
+{
+    win->user = user;
+}
+
+void *tickit_window_get_user(TickitWindow *win)
+{
+    return win->user;
 }
 
 void tickit_window_raise(TickitWindow *win)
