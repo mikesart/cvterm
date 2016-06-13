@@ -28,6 +28,14 @@ enum messages
 #define MOD_ALT         2
 #define MOD_CTRL        4
 
+// Draw attrs
+#define DRAW_ATTR_BOLD      0x01
+#define DRAW_ATTR_UNDERLINE 0x02
+#define DRAW_ATTR_ITALIC    0x04
+#define DRAW_ATTR_REVERSE   0x08
+#define DRAW_ATTR_STRIKEOUT 0x10
+#define DRAW_ATTR_BLINK     0x20
+
 typedef union
 {
     struct
@@ -72,5 +80,9 @@ void window_invalidate_rect(window *w, const rect *rc);
 void window_eraserect(window *w, const rect *rc);
 void window_set_cursor_pos(window *w, int x, int y);
 void window_drawtext(window *w, const char *text);
+void window_set_draw_attrs(window *w, uint32_t attrs);
+void window_clear_draw_attrs(window *w, uint32_t attrs);
+void window_set_fg_color(window *w, int clr);
+void window_set_bg_color(window *w, int clr);
 
 #endif // __WINDOW_H__

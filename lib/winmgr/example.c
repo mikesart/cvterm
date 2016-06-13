@@ -20,9 +20,21 @@ uint32_t root_proc(root *r, int id, const message_data *data)
     switch (id)
     {
     case WM_PAINT:
-        window_eraserect(r->w, &data->paint.rc);
-        window_set_cursor_pos(r->w, 0, 0);
-        window_drawtext(r->w, r->greetings);
+        {
+            window_eraserect(r->w, &data->paint.rc);
+            window_set_draw_attrs(r->w, DRAW_ATTR_BOLD);
+
+            // Colorful greetings message
+            int count = strlen(r->greetings);
+            for (int i = 0; i < count; i++)
+            {
+                window_set_fg_color(r->w, i & 15);
+                window_set_bg_color(r->w, 15 - (i & 15));
+                window_set_cursor_pos(r->w, i, 0);
+                char chars[2] = { r->greetings[i], 0 };
+                window_drawtext(r->w, chars);
+            }
+        }
         break;
 
     case WM_CHAR:
@@ -94,7 +106,7 @@ void breakhere() {}
 
 int main(int argc, char **argv)
 {
-#if 1
+#if 0
     char c;
     read(0, &c, 1);
     breakhere();

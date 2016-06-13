@@ -18,6 +18,11 @@ struct window
     winmgr *wm;
     TickitWindow *tw;
     TickitRenderBuffer *rb;
+    TickitPen *pen;
+    uint32_t draw_attrs;
+    int clr_fg;
+    int clr_bg;
+    bool setpen;
     handler h;
     uint32_t flags;
 };
@@ -143,6 +148,13 @@ window *new_window(winmgr *wm, TickitWindow *tw, handler h, uint32_t flags)
     // gets cleaned up on tickit window destroy
     tickit_window_bind_event(w->tw, event_type, 0, tickit_window_event_proc, w);
 
+    // Create a pen for drawing attributes
+    w->pen = tickit_pen_new();
+    w->draw_attrs = 0;
+    w->clr_fg = -1;
+    w->clr_bg = -1;
+    w->setpen = false;
+
     // Notify client
     handler_call(h, WM_CREATE, NULL);
 
@@ -184,23 +196,6 @@ void window_invalidate_rect(window *w, const rect *rc)
     message_post(w->wm->h, WM_CHECKFLUSH, NULL);
 }
 
-void window_set_cursor_pos(window *w, int x, int y)
-{
-    tickit_renderbuffer_goto(w->rb, y, x);
-}
-
-void window_eraserect(window *w, const rect *rc)
-{
-    TickitRect trc;
-    rect_to_tickitrect(rc, &trc);
-    tickit_renderbuffer_eraserect(w->rb, &trc);
-}
-
-void window_drawtext(window *w, const char *text)
-{
-    tickit_renderbuffer_text(w->rb, text);
-}
-
 uint32_t winmgr_proc(winmgr *wm, int id, const message_data *data)
 {
     switch (id)
@@ -221,12 +216,16 @@ int handle_expose(window *w, TickitExposeEventInfo *info)
     //
     // For now only support rendering during expose callbacks.
     w->rb = info->rb;
+    tickit_renderbuffer_save(w->rb);
+    if (w->draw_attrs || w->clr_fg != -1 || w->clr_bg != -1)
+        w->setpen = true;
 
     message_data data;
     memset(&data, 0, sizeof(data));
     tickitrect_to_rect(&info->rect, &data.paint.rc);
     handler_call(w->h, WM_PAINT, &data);
 
+    tickit_renderbuffer_restore(w->rb);
     w->rb = NULL;
 
     return 1;
@@ -299,6 +298,8 @@ int tickit_window_event_proc(TickitWindow *tw, TickitEventType ev, void *info, v
         // This event occurs when the ticket window is being freed.
         // Free our wrapping object.
         handler_call(w->h, WM_DESTROY, NULL);
+        tickit_window_set_pen(tw, NULL);
+        tickit_pen_destroy(w->pen);
         tickit_window_set_user(tw, NULL);
         free(w);
         return 1;
@@ -306,4 +307,95 @@ int tickit_window_event_proc(TickitWindow *tw, TickitEventType ev, void *info, v
 
     // Keep running the tickit hook list.
     return 0;
+}
+
+void window_set_cursor_pos(window *w, int x, int y)
+{
+    tickit_renderbuffer_goto(w->rb, y, x);
+}
+
+void window_eraserect(window *w, const rect *rc)
+{
+    TickitRect trc;
+    rect_to_tickitrect(rc, &trc);
+    tickit_renderbuffer_eraserect(w->rb, &trc);
+}
+
+void window_drawtext(window *w, const char *text)
+{
+    // _setpen is ineffcient: the implementation allocates a new pen
+    // and copies every time, however setting the pen is necessary
+    // for the renderbuffer to pick up any new attributes.
+    if (w->setpen)
+    {
+        tickit_renderbuffer_setpen(w->rb, w->pen);
+        w->setpen = false;
+    }
+    tickit_renderbuffer_text(w->rb, text);
+}
+
+void window_set_draw_attrs(window *w, uint32_t attrs)
+{
+    // Try to be clever about setting attrs to avoid calling
+    // tickit_renderbuffer_setpen as much as possible.
+    uint32_t attrs_set = attrs & ~w->draw_attrs;
+    if (!attrs_set)
+        return;
+    w->draw_attrs |= attrs_set;
+    w->setpen = true;
+
+    if (attrs_set & DRAW_ATTR_BOLD)
+        tickit_pen_set_bool_attr(w->pen, TICKIT_PEN_BOLD, true);
+    if (attrs_set & DRAW_ATTR_UNDERLINE)
+        tickit_pen_set_bool_attr(w->pen, TICKIT_PEN_UNDER, true);
+    if (attrs_set & DRAW_ATTR_ITALIC)
+        tickit_pen_set_bool_attr(w->pen, TICKIT_PEN_ITALIC, true);
+    if (attrs_set & DRAW_ATTR_REVERSE)
+        tickit_pen_set_bool_attr(w->pen, TICKIT_PEN_REVERSE, true);
+    if (attrs_set & DRAW_ATTR_STRIKEOUT)
+        tickit_pen_set_bool_attr(w->pen, TICKIT_PEN_STRIKE, true);
+    if (attrs_set & DRAW_ATTR_BLINK)
+        tickit_pen_set_bool_attr(w->pen, TICKIT_PEN_BLINK, true);
+}
+
+void window_clear_draw_attrs(window *w, uint32_t attrs)
+{
+    // Try to be clever about setting attrs to avoid calling
+    // tickit_renderbuffer_setpen as much as possible.
+    uint32_t attrs_clear = attrs & w->draw_attrs;
+    if (!attrs_clear)
+        return;
+    w->draw_attrs &= ~attrs_clear;
+    w->setpen = true;
+
+    if (attrs_clear & DRAW_ATTR_BOLD)
+        tickit_pen_set_bool_attr(w->pen, TICKIT_PEN_BOLD, false);
+    if (attrs_clear & DRAW_ATTR_UNDERLINE)
+        tickit_pen_set_bool_attr(w->pen, TICKIT_PEN_UNDER, false);
+    if (attrs_clear & DRAW_ATTR_ITALIC)
+        tickit_pen_set_bool_attr(w->pen, TICKIT_PEN_ITALIC, false);
+    if (attrs_clear & DRAW_ATTR_REVERSE)
+        tickit_pen_set_bool_attr(w->pen, TICKIT_PEN_REVERSE, false);
+    if (attrs_clear & DRAW_ATTR_STRIKEOUT)
+        tickit_pen_set_bool_attr(w->pen, TICKIT_PEN_STRIKE, false);
+    if (attrs_clear & DRAW_ATTR_BLINK)
+        tickit_pen_set_bool_attr(w->pen, TICKIT_PEN_BLINK, false);
+}
+
+void window_set_fg_color(window *w, int clr)
+{
+    if (w->clr_fg == clr)
+        return;
+    w->clr_fg = clr;
+    w->setpen = true;
+    tickit_pen_set_colour_attr(w->pen, TICKIT_PEN_FG, clr);
+}
+
+void window_set_bg_color(window *w, int clr)
+{
+    if (w->clr_bg == clr)
+        return;
+    w->clr_bg = clr;
+    w->setpen = true;
+    tickit_pen_set_colour_attr(w->pen, TICKIT_PEN_BG, clr);
 }
