@@ -63,6 +63,7 @@ void main_loop()
     {
         fd_set fds;
         FD_ZERO(&fds);
+        FD_SET(0, &fds);
         FD_SET(fd, &fds);
 
         int ret = select(fd + 1, &fds, NULL, NULL, NULL);
@@ -71,6 +72,13 @@ void main_loop()
         {
             if (errno == EINTR)
                 continue;
+        }
+
+        if (FD_ISSET(0, &fds))
+        {
+            // This won't be on the outside like this if/when the fd eventing is
+            // handled by the messaging system.
+            winmgr_input_readable();
         }
 
         if (FD_ISSET(fd, &fds))

@@ -97,6 +97,13 @@ window *winmgr_create_root_window(handler h)
     return wm->root;
 }
 
+void winmgr_input_readable()
+{
+    winmgr *wm = s_winmgr;
+
+    tickit_term_input_readable(wm->tt);
+}
+
 window *window_create(window *parent, const rect *rc, handler h, uint32_t flags)
 {
     TickitRect trc;
@@ -173,6 +180,8 @@ void window_invalidate_rect(window *w, const rect *rc)
     {
         tickit_window_expose(w->tw, NULL);
     }
+
+    message_post(w->wm->h, WM_CHECKFLUSH, NULL);
 }
 
 void window_set_cursor_pos(window *w, int x, int y)

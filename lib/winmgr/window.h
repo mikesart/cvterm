@@ -62,6 +62,7 @@ typedef struct
 int winmgr_init(const char *termtype, int fd_in, int fd_out);
 void winmgr_shutdown();
 window *winmgr_create_root_window(handler h);
+void winmgr_input_readable();
 
 window *window_create(window *parent, const rect *rc, handler h, uint32_t flags);
 int window_destroy(window *w);
