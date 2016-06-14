@@ -12,17 +12,18 @@ typedef struct
 {
     window *w;
     handler h;
-    char greetings[128];
-} root;
+    char message[128];
+} testwin;
 
-uint32_t root_proc(root *r, int id, const message_data *data)
+uint32_t testwin_proc(testwin *t, int id, const message_data *data)
 {
     switch (id)
     {
     case WM_PAINT:
         {
-            WINDOW *win = window_WIN(r->w);
-            waddstr(win, r->greetings);
+            WINDOW *win = window_WIN(t->w);
+            wmove(win, 0, 0);
+            waddstr(win, t->message);
         }
         break;
     }
@@ -30,22 +31,24 @@ uint32_t root_proc(root *r, int id, const message_data *data)
     return 0;
 }
 
-root *root_create(const char *greetings)
+testwin *testwin_create(const char *message, int x, int y)
 {
-    root *r = malloc(sizeof(root));
-    memset(r, 0, sizeof(*r));
-    strncpy(r->greetings, greetings, sizeof(r->greetings) - 1);
-    r->h = handler_create(r, (handler_proc)root_proc);
-    r->w = winmgr_create_root_window(r->h);
+    testwin *t = malloc(sizeof(testwin));
+    memset(t, 0, sizeof(*t));
+    strncpy(t->message, message, sizeof(t->message) - 1);
+    t->h = handler_create(t, (handler_proc)testwin_proc);
+    rect rc;
+    rect_set(&rc, x, y, x + 20, y + 10);
+    t->w = window_create(NULL, &rc, t->h, WF_VISIBLE);
 
-    return r;
+    return t;
 }
 
-void root_destroy(root *r)
+void testwin_destroy(testwin *t)
 {
-    window_destroy(r->w);
-    handler_destroy(r->h);
-    free(r);
+    window_destroy(t->w);
+    handler_destroy(t->h);
+    free(t);
 }
 
 void main_loop()
@@ -96,11 +99,13 @@ int main(int argc, char **argv)
         return 1;
     }
 
-    root *r = root_create("hello world!");
+    testwin *t1 = testwin_create("child1", 10, 20);
+    testwin *t2 = testwin_create("child2", 50, 20);
 
     main_loop();
 
-    root_destroy(r);
+    testwin_destroy(t2);
+    testwin_destroy(t1);
 
     winmgr_shutdown();
 

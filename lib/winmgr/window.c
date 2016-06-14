@@ -29,10 +29,11 @@ static winmgr *s_winmgr;
 window *new_window(winmgr *wm, window *parent, WINDOW *win, const rect *rc, handler h, uint32_t flags);
 uint32_t winmgr_proc(winmgr *wm, int id, const message_data *data);
 
-int winmgr_init()
+window *winmgr_init()
 {
-    if (s_winmgr)
-        return 1;
+    winmgr *wm = s_winmgr;
+    if (wm)
+        return wm->root;
 
     // Initialize messaging
     message_init(sizeof(message_data));
@@ -49,14 +50,24 @@ int winmgr_init()
     // Enable backspace, delete, and four arrow keys
     keypad(stdscr, TRUE);
 
-    winmgr *wm = malloc(sizeof(winmgr));
+    // create the window manager object
+    wm = malloc(sizeof(winmgr));
     memset(wm, 0, sizeof(*wm));
     wm->h = handler_create(wm, (handler_proc)winmgr_proc);
-    message_set_hook(wm->h);
-
     s_winmgr = wm;
 
-    return 1;
+    // Create the root window
+    rect rc;
+    int cy, cx;
+    getmaxyx(stdscr, cy, cx);
+    rect_set(&rc, 0, 0, cx, cy);
+    wm->root = new_window(wm, NULL, stdscr, &rc, 0, WF_VISIBLE);
+
+    // This allows the window manager to paint windows at
+    // message queue idle time.
+    message_set_hook(wm->h);
+
+    return wm->root;
 }
 
 void winmgr_shutdown()
@@ -80,24 +91,18 @@ void winmgr_shutdown()
     message_shutdown();
 }
 
-window *winmgr_create_root_window(handler h)
+window *winmgr_get_root()
 {
     winmgr *wm = s_winmgr;
-
-    rect rc;
-    int cy, cx;
-    getmaxyx(stdscr, cy, cx);
-    rect_set(&rc, 0, 0, cx, cy);
-
-    wm->root = new_window(wm, NULL, stdscr, &rc, h, 0);
-
     return wm->root;
 }
 
 window *window_create(window *parent, const rect *rc, handler h, uint32_t flags)
 {
+    winmgr *wm = s_winmgr;
+
     if (parent == NULL)
-        return NULL;
+        parent = wm->root;
 
     // Coords passed in are parent relative. Make them screen relative.
     rect rcT = *rc;
@@ -106,7 +111,7 @@ window *window_create(window *parent, const rect *rc, handler h, uint32_t flags)
     // A window can be visible or hidden, or a window can be visible but without
     // ncurses WINDOW (like a container of other windows).
     WINDOW *win = NULL;
-    if ((flags & WF_VISIBLE) && !(flags & WF_NOPAINT))
+    if ((flags & WF_VISIBLE) && !(flags & WF_CONTAINER))
     {
         win = newwin(rc->bottom - rc->top, rc->right - rc->left, rc->top, rc->left);
     }
@@ -136,7 +141,10 @@ window *new_window(winmgr *wm, window *parent, WINDOW *win, const rect *rc, hand
     }
 
     // Notify client
-    handler_call(h, WM_CREATE, NULL);
+    message_data data;
+    memset(&data, 0, sizeof(data));
+    data.create.w = w;
+    handler_call(h, WM_CREATE, &data);
 
     // Mark it invalid so it gets a paint message
     if (w->win)
@@ -178,8 +186,51 @@ void window_destroy(window *w)
     free(w);
 }
 
+handler window_set_handler(window *w, handler h)
+{
+    handler old = w->h;
+    w->h = h;
+    return old;
+}
+
+void window_set_visible(window *w, int visible)
+{
+    if (!visible)
+    {
+        if (w->flags & WF_VISIBLE)
+        {
+            if (w->win && w->win != stdscr)
+            {
+                delwin(w->win);
+                w->win = NULL;
+            }
+            w->flags &= ~WF_VISIBLE;
+        }
+    }
+    else
+    {
+        if (!(w->flags & WF_VISIBLE))
+        {
+            if (!(w->flags & WF_CONTAINER))
+            {
+                w->win = newwin(w->rc.bottom - w->rc.top, w->rc.right - w->rc.left, w->rc.top, w->rc.left);
+            }
+            w->flags |= WF_VISIBLE;
+            window_invalidate(w);
+        }
+    }
+}
+
 void window_invalidate(window *w)
 {
+    // Mark children as invalid as well
+    if (w->flags & WF_VISIBLE)
+    {
+        for (window *wT = w->child; wT != NULL; wT = wT->next)
+            window_invalidate(wT);
+    }
+
+    // Mark this window invalid so it gets a paint message.
     if (w->win)
     {
         w->invalid = 1;
@@ -190,6 +241,9 @@ void window_invalidate(window *w)
 
 window *find_invalid(window *w)
 {
+    if (!(w->flags & WF_VISIBLE))
+        return NULL;
+
     for (window *child = w->child; child != NULL; child = child->next)
     {
         window *wT = find_invalid(child);
@@ -198,7 +252,11 @@ window *find_invalid(window *w)
     }
 
     if (w->invalid)
-        return w;
+    {
+        // stdscr can't be invalid if it has children.
+        if (w->win != stdscr || w->child == NULL)
+            return w;
+    }
 
     return NULL;
 }
