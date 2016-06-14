@@ -172,7 +172,7 @@ void message_post(handler h, int id, const void *data)
         ppitem = &((*ppitem)->next);
     *ppitem = item;
     item->next = NULL;
-    message_hook_readable();
+    set_readable(1);
 }
 
 void message_dispatch(void *msg)
@@ -193,7 +193,7 @@ void message_set_hook(handler h)
 {
     message_queue *queue = s_queue;
     queue->h = h;
-    message_hook_readable();
+    set_readable(1);
 }
 
 //
