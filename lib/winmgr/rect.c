@@ -24,7 +24,7 @@ void rect_offset(rect *rc, int x, int y)
     rc->bottom += y;
 }
 
-void rect_union(rect *result, rect *rc1, rect *rc2)
+void rect_union(rect *result, const rect *rc1, const rect *rc2)
 {
     if (rect_empty(rc1))
     {
@@ -33,12 +33,12 @@ void rect_union(rect *result, rect *rc1, rect *rc2)
             rect_set_empty(result);
             return;
         }
-        result = rc2;
+        *result = *rc2;
         return;
     }
     else if (rect_empty(rc2))
     {
-        result = rc1;
+        *result = *rc1;
         return;
     }
 
@@ -48,7 +48,7 @@ void rect_union(rect *result, rect *rc1, rect *rc2)
     result->bottom = rc1->bottom > rc2->bottom ? rc1->bottom : rc2->bottom;
 }
 
-int rect_intersect(rect *result, rect *rc1, rect *rc2)
+int rect_intersect(rect *result, const rect *rc1, const rect *rc2)
 {
     if (rect_empty(rc1) || rect_empty(rc2))
     {
@@ -56,20 +56,30 @@ int rect_intersect(rect *result, rect *rc1, rect *rc2)
         return 0;
     }
 
-    result->left = rc1->left > rc2->left ? rc1->left : rc2->left;
-    result->top = rc1->top > rc2->top ? rc1->top : rc2->top;
-    result->right = rc1->right < rc2->right ? rc1->right : rc2->right;
-    result->bottom = rc1->bottom < rc2->bottom ? rc1->bottom : rc2->bottom;
+    // Intersect
+    rect rcT;
+    rcT.left = rc1->left > rc2->left ? rc1->left : rc2->left;
+    rcT.top = rc1->top > rc2->top ? rc1->top : rc2->top;
+    rcT.right = rc1->right < rc2->right ? rc1->right : rc2->right;
+    rcT.bottom = rc1->bottom < rc2->bottom ? rc1->bottom : rc2->bottom;
 
-    return !rect_empty(result);
+    // Copy at the end in case result is also rc1 or rc2
+    if (!rect_empty(&rcT))
+    {
+        *result = rcT;
+        return 1;
+    }
+
+    rect_set_empty(result);
+    return 0;
 }
 
-int rect_empty(rect *rc)
+int rect_empty(const rect *rc)
 {
     return (rc->left >= rc->right || rc->top >= rc->bottom);
 }
 
-int rect_equal(rect *rc1, rect *rc2)
+int rect_equal(const rect *rc1, const rect *rc2)
 {
     return (rc1->left == rc2->left && rc1->top == rc2->top &&
         rc1->right == rc2->right && rc1->bottom == rc2->bottom);
