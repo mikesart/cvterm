@@ -8,16 +8,12 @@
 typedef struct winmgr winmgr;
 typedef struct window window;
 
-// Window flags
-#define WF_VISIBLE      1
-#define WF_CONTAINER    2
-
-// Standard window messages
 enum messages
 {
     WM_CREATE = 1,
     WM_DESTROY,
     WM_PAINT,
+    WM_POSCHANGED,
     WM_USER = 1000
 };
 
@@ -30,15 +26,9 @@ typedef union
 
     struct
     {
-        int key;
-        uint8_t modifiers;
-    } key;
-
-    struct
-    {
-        char utf8[6 + 1]; // Unicode chars can be utf-8 encoded in 6 bytes
-        uint8_t modifiers;
-    } chr;
+        const rect *rc_old;
+        const rect *rc_new;
+    } pos_changed;
 
     struct
     {
@@ -54,12 +44,18 @@ typedef struct
 
 window *winmgr_init();
 void winmgr_shutdown();
+void winmgr_update();
+int winmgr_resize_fd();
+void winmgr_resize();
 
-window *window_create(window *parent, const rect *rc, handler h, uint32_t flags);
+window *window_create(window *parent, const rect *rc, handler h, int id);
 void window_destroy(window *w);
 void window_invalidate(window *w);
 void window_set_visible(window *w, int visible);
-handler window_set_handler(window *, handler h);
+int window_set_pos(window *w, const rect *rc);
+window *window_find_window(window *w, int id);
+handler window_set_handler(window *w, handler h);
+void window_rect(window *w, rect *rc);
 WINDOW *window_WIN();
 
 #endif // __WINDOW_H__

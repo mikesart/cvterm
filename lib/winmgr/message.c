@@ -52,7 +52,7 @@ typedef struct
     int data_size;
     int pipe[2];
     int readable;
-    handler h;
+    handler hook;
 } message_queue;
 
 static message_queue *s_queue;
@@ -148,7 +148,7 @@ int message_get(void *msg)
         return 1;
     }
 
-    int readable = handler_call(queue->h, MM_READABLE, NULL);
+    int readable = handler_call(queue->hook, MM_READABLE, NULL);
     if (!readable && !queue->first)
         set_readable(0);
 
@@ -189,10 +189,10 @@ void message_dispatch(void *msg)
     }
 }
 
-void message_set_hook(handler h)
+void message_set_hook(handler hook)
 {
     message_queue *queue = s_queue;
-    queue->h = h;
+    queue->hook = hook;
     set_readable(1);
 }
 

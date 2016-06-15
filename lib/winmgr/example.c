@@ -8,6 +8,9 @@
 #define CLOG_MAIN
 #include "clog.h"
 
+#define ID_CHILD_1 1
+#define ID_CHILD_2 2
+
 typedef struct
 {
     window *w;
@@ -22,51 +25,122 @@ uint32_t testwin_proc(testwin *t, int id, const message_data *data)
     case WM_PAINT:
         {
             WINDOW *win = window_WIN(t->w);
+            werase(win);
             wmove(win, 0, 0);
+            wborder(win, ACS_VLINE, ACS_VLINE, ACS_HLINE, ACS_HLINE, ACS_ULCORNER,
+                ACS_URCORNER, ACS_LLCORNER, ACS_LRCORNER);
+
+            // Get the ncurses window size to check for size mismatch
+            int cx, cy;
+            getmaxyx(win, cy, cx);
+            int x = (cx - 10) / 2;
+            int y = (cy - 3) / 2;
+            wmove(win, y, x);
             waddstr(win, t->message);
+            char str[32];
+            sprintf(str, "ncurses: %d,%d", cx, cy);
+            wmove(win, y + 1, x);
+            waddstr(win, str);
+            rect rc;
+            window_rect(t->w, &rc);
+            sprintf(str, "window: %d,%d", rc.right - rc.left, rc.bottom - rc.top);
+            wmove(win, y + 2, x);
+            waddstr(win, str);
         }
+        break;
+
+    case WM_DESTROY:
+        handler_destroy(t->h);
+        free(t);
         break;
     }
 
     return 0;
 }
 
-testwin *testwin_create(const char *message, int x, int y)
+testwin *testwin_create(const char *message, const rect *rc, int id)
 {
     testwin *t = malloc(sizeof(testwin));
     memset(t, 0, sizeof(*t));
     strncpy(t->message, message, sizeof(t->message) - 1);
     t->h = handler_create(t, (handler_proc)testwin_proc);
-    rect rc;
-    rect_set(&rc, x, y, x + 20, y + 10);
-    t->w = window_create(NULL, &rc, t->h, WF_VISIBLE);
-
+    t->w = window_create(NULL, rc, t->h, id);
     return t;
 }
 
-void testwin_destroy(testwin *t)
+typedef struct
 {
-    window_destroy(t->w);
-    handler_destroy(t->h);
-    free(t);
+    handler h;
+    handler h_old;
+} root;
+
+void get_child_rect(int id, rect *rc)
+{
+    rect rc_parent;
+    window_rect(NULL, &rc_parent);
+
+    if (id == ID_CHILD_1)
+        rect_set(rc, 0, 0, (rc_parent.right - rc_parent.left) / 2, rc_parent.bottom);
+
+    if (id == ID_CHILD_2)
+        rect_set(rc, (rc_parent.right - rc_parent.left) / 2, 0, rc_parent.right, rc_parent.bottom);
+}
+
+uint32_t root_proc(root *r, int id, const message_data *data)
+{
+    switch (id) {
+    case WM_POSCHANGED:
+        {
+            rect rc;
+            get_child_rect(ID_CHILD_1, &rc);
+            window_set_pos(window_find_window(NULL, ID_CHILD_1), &rc);
+            get_child_rect(ID_CHILD_2, &rc);
+            window_set_pos(window_find_window(NULL, ID_CHILD_2), &rc);
+        }
+        break;
+
+    case WM_DESTROY:
+        handler_destroy(r->h);
+        free(r);
+        break;
+    }
+
+    return handler_call(r->h_old, id, data);
+}
+
+
+root *root_create()
+{
+    root *r = malloc(sizeof(root));
+    memset(r, 0, sizeof(*r));
+    r->h = handler_create(r, (handler_proc)root_proc);
+    r->h_old = window_set_handler(NULL, r->h);
 }
 
 void main_loop()
 {
     int fd = message_fd();
+    int fd_resize = winmgr_resize_fd();
 
     for ( ;; )
     {
         fd_set fds;
         FD_ZERO(&fds);
         FD_SET(fd, &fds);
+        FD_SET(fd_resize, &fds);
 
-        int ret = select(fd + 1, &fds, NULL, NULL, NULL);
+        int fd_max = fd > fd_resize ? fd : fd_resize;
+        int ret = select(fd_max + 1, &fds, NULL, NULL, NULL);
 
         if (ret == -1)
         {
             if (errno == EINTR)
                 continue;
+        }
+
+        if (FD_ISSET(fd_resize, &fds))
+        {
+            winmgr_resize();
         }
 
         if (FD_ISSET(fd, &fds))
@@ -99,13 +173,16 @@ int main(int argc, char **argv)
         return 1;
     }
 
-    testwin *t1 = testwin_create("child1", 10, 20);
-    testwin *t2 = testwin_create("child2", 50, 20);
+    // The root will manage two children.
+    root *r = root_create();
+
+    rect rc;
+    get_child_rect(ID_CHILD_1, &rc);
+    testwin_create("child1", &rc, ID_CHILD_1);
+    get_child_rect(ID_CHILD_2, &rc);
+    testwin_create("child2", &rc, ID_CHILD_2);
 
     main_loop();
-
-    testwin_destroy(t2);
-    testwin_destroy(t1);
 
     winmgr_shutdown();
 
