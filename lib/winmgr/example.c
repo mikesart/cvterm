@@ -100,8 +100,12 @@ uint32_t root_proc(root *r, int id, const message_data *data)
         break;
 
     case WM_DESTROY:
-        handler_destroy(r->h);
-        free(r);
+        {
+            handler h_old = r->h_old;
+            handler_destroy(r->h);
+            free(r);
+            return handler_call(h_old, id, data);
+        }
         break;
     }
 
