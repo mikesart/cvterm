@@ -26,6 +26,7 @@
  *
  **************************************************************************/
 
+#define _GNU_SOURCE
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
@@ -67,11 +68,15 @@ int message_init(int data_size)
 
     if (!queue)
     {
-        handle_table_init();
+        int pipe_fds[2];
+        if (pipe(pipe_fds))
+            return 0;
         queue = malloc(sizeof(message_queue));
         memset(queue, 0, sizeof(*queue));
-        pipe(queue->pipe);
         queue->data_size = data_size;
+        queue->pipe[0] = pipe_fds[0];
+        queue->pipe[1] = pipe_fds[1];
+        handle_table_init();
         s_queue = queue;
     }
 
@@ -113,8 +118,8 @@ void set_readable(int readable)
         {
             // Read the char in the pipe so the outer select will block
             unsigned char b;
-            read(queue->pipe[0], &b, sizeof(b));
-            queue->readable = 0;
+            if (read(queue->pipe[0], &b, sizeof(b)))
+                queue->readable = 0;
         }
     }
     else
@@ -124,8 +129,8 @@ void set_readable(int readable)
             // Write a char to the pipe so the outer select will be signaled
             // and check for messages.
             unsigned char b = 0;
-            write(queue->pipe[1], &b, sizeof(b));
-            queue->readable = 1;
+            if (write(queue->pipe[1], &b, sizeof(b)))
+                queue->readable = 1;
         }
     }
 }

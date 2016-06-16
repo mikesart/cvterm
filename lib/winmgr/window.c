@@ -1,11 +1,12 @@
 #define _GNU_SOURCE
-#include <string.h>
+#include <stdlib.h>
 #include <stdint.h>
+#include <unistd.h>
+#include <string.h>
 #include <signal.h>
 #include <sys/ioctl.h>
 #include "window.h"
 #include "message.h"
-#include "clog.h"
 
 struct winmgr
 {
@@ -47,7 +48,8 @@ window *winmgr_init()
         return wm->root;
 
     // Initialize messaging
-    message_init(sizeof(message_data));
+    if (!message_init(sizeof(message_data)))
+        return NULL;
 
     // Init ncurses mode
     initscr();
@@ -85,12 +87,17 @@ window *winmgr_init()
     if (!s_sigwinch_installed)
     {
         s_pipe_signaled = 0;
-        pipe(s_resize_pipe);
+        if (pipe(s_resize_pipe))
+        {
+            winmgr_shutdown();
+            return NULL;
+        }
         struct sigaction action;
         action.sa_handler = sigwinch_signal_handler;
         sigemptyset(&action.sa_mask);
         action.sa_flags = 0;
-        if (sigaction(SIGWINCH, &action, &s_sigwinch_sigaction_old) < 0) {
+        if (sigaction(SIGWINCH, &action, &s_sigwinch_sigaction_old) < 0)
+        {
             winmgr_shutdown();
             return NULL;
         }
@@ -139,8 +146,8 @@ void sigwinch_signal_handler(int sig)
         {
             // Write to the pipe to wake up the select loop
             unsigned char b = 0;
-            write(s_resize_pipe[1], &b, sizeof(b));
-            s_pipe_signaled = 1;
+            if (write(s_resize_pipe[1], &b, sizeof(b)))
+                s_pipe_signaled = 1;
         }
 
         if (s_sigwinch_sigaction_old.sa_handler)
@@ -154,8 +161,8 @@ void winmgr_resize()
     if (s_sigwinch_installed && s_pipe_signaled)
     {
         unsigned char b;
-        read(s_resize_pipe[0], &b, sizeof(b));
-        s_pipe_signaled = 0;
+        if (read(s_resize_pipe[0], &b, sizeof(b)))
+            s_pipe_signaled = 0;
     }
 
     winmgr *wm = s_winmgr;
