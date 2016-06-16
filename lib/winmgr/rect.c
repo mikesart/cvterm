@@ -24,6 +24,14 @@ void rect_offset(rect *rc, int x, int y)
     rc->bottom += y;
 }
 
+void rect_inflate(rect *rc, int x, int y)
+{
+    rc->left += x;
+    rc->top += y;
+    rc->right -= x;
+    rc->bottom -= y;
+}
+
 void rect_union(rect *result, const rect *rc1, const rect *rc2)
 {
     if (rect_empty(rc1))
