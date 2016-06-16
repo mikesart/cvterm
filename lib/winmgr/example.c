@@ -119,6 +119,7 @@ root *root_create()
     memset(r, 0, sizeof(*r));
     r->h = handler_create(r, (handler_proc)root_proc);
     r->h_old = window_set_handler(NULL, r->h);
+    return r;
 }
 
 void main_loop()
@@ -178,7 +179,7 @@ int main(int argc, char **argv)
     }
 
     // The root will manage two children.
-    root *r = root_create();
+    root_create();
 
     rect rc;
     get_child_rect(ID_CHILD_1, &rc);

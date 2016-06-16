@@ -84,7 +84,7 @@ window *winmgr_init()
     // Resize handler
     if (!s_sigwinch_installed)
     {
-        s_sigwinch_installed = 0;
+        s_pipe_signaled = 0;
         pipe(s_resize_pipe);
         struct sigaction action;
         action.sa_handler = sigwinch_signal_handler;
@@ -94,7 +94,6 @@ window *winmgr_init()
             winmgr_shutdown();
             return NULL;
         }
-        s_pipe_signaled = 0;
         s_sigwinch_installed = 1;
     }
 
@@ -186,7 +185,6 @@ void winmgr_resize()
 
 int winmgr_resize_fd()
 {
-    winmgr *wm = s_winmgr;
     return s_resize_pipe[0];
 }
 
@@ -265,9 +263,14 @@ window *window_create(window *parent, const rect *rc, handler h, int id)
     rect rcT = *rc;
     rect_offset(&rcT, parent->rc.left, parent->rc.top);
 
+    // Clip to the screen to work around ncurses behavior
+    rect_intersect(&rcT, &rcT, &wm->root->rc);
+
     // A window can be visible or hidden, or a window can be visible but without
     // ncurses WINDOW (like a container of other windows).
     WINDOW *win = newwin(rc->bottom - rc->top, rc->right - rc->left, rc->top, rc->left);
+    if (win == NULL)
+        return NULL;
     return new_window(parent->wm, parent, win, &rcT, h, id);
 }
 
@@ -449,7 +452,7 @@ int window_set_pos(window *w, const rect *rc)
 
     if (rc_new.left != w->rc.left || rc_new.top != w->rc.top)
     {
-        // Pre-size to a size that won't cause move to fail.
+        // Pre-size to a size that won't cause mvwin to fail.
         int width_adj = (w->rc.left + width_new) - wm->root->rc.right;
         if (width_adj < 0)
             width_adj = 0;
@@ -500,7 +503,7 @@ window *window_find_window(window *w, int id)
 {
     winmgr *wm = s_winmgr;
     if (w == NULL)
-        w = s_winmgr->root;
+        w = wm->root;
 
     for (window *child = w->child; child != NULL; child = child->next)
     {
@@ -515,7 +518,7 @@ void window_rect(window *w, rect *rc)
 {
     winmgr *wm = s_winmgr;
     if (w == NULL)
-        w = s_winmgr->root;
+        w = wm->root;
 
     *rc = w->rc;
     if (w->parent != NULL)
