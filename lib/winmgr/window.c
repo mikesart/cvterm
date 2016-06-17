@@ -436,16 +436,12 @@ WINDOW *window_WIN(window *w)
     return w->win;
 }
 
-int window_set_pos(window *w, const rect *rc)
+int set_pos_helper(window *w, const rect *rc)
 {
     winmgr *wm = s_winmgr;
 
-    // Convert to screen coords
+    rect rc_old = w->rc;
     rect rc_new = *rc;
-    if (w->parent)
-        rect_offset(&rc_new, w->parent->rc.left, w->parent->rc.top);
-    if (rect_equal(&w->rc, &rc_new))
-        return 1;
 
     // Make sure it fits on-screen. ncurses behaves badly
     // if it is off screen in any way.
@@ -453,17 +449,19 @@ int window_set_pos(window *w, const rect *rc)
     {
         rect_intersect(&rc_new, &rc_new, &wm->root->rc);
     }
+    if (rect_equal(&rc_new, &rc_old))
+        return 1;
 
     int height_new = rc_new.bottom - rc_new.top;
     int width_new = rc_new.right - rc_new.left;
 
-    if (rc_new.left != w->rc.left || rc_new.top != w->rc.top)
+    if (rc_new.left != rc_old.left || rc_new.top != rc_old.top)
     {
         // Pre-size to a size that won't cause mvwin to fail.
-        int width_adj = (w->rc.left + width_new) - wm->root->rc.right;
+        int width_adj = (rc_old.left + width_new) - wm->root->rc.right;
         if (width_adj < 0)
             width_adj = 0;
-        int height_adj = (w->rc.top + height_new) - wm->root->rc.bottom;
+        int height_adj = (rc_old.top + height_new) - wm->root->rc.bottom;
         if (height_adj < 0)
             height_adj = 0;
         if (width_adj != 0 || height_adj != 0)
@@ -476,8 +474,19 @@ int window_set_pos(window *w, const rect *rc)
     }
     if (wresize(w->win, height_new, width_new) == ERR)
         return 0;
-    rect rc_old = w->rc;
     w->rc = rc_new;
+
+    // Update children if the parent position changed. Note this may need to resize a
+    // child that extends past the screen dimensions.
+    if (rc_new.left != rc_old.left || rc_new.top != rc_old.top)
+    {
+        for (window *child = w->child; child != NULL; child = child->next)
+        {
+            rect rc_child = child->rc;
+            rect_offset(&rc_child, rc_new.left - rc_old.left, rc_new.top - rc_old.top);
+            set_pos_helper(child, &rc_child);
+        }
+    }
 
     // Invalidate affected windows
     rect rc_invalid;
@@ -492,18 +501,34 @@ int window_set_pos(window *w, const rect *rc)
         window_invalidate_rect(w, &rc_invalid);
     }
 
-    // Notify 
+    // Notify if parent relative position changed, or if size changed.
+    rect rc_old_notify = rc_old;
+    rect rc_new_notify = rc_new;
     if (w->parent)
     {
-        rect_offset(&rc_old, -w->parent->rc.left, -w->parent->rc.top);
-        rect_offset(&rc_new, -w->parent->rc.left, -w->parent->rc.top);
+        rect_offset(&rc_old_notify, -w->parent->rc.left, -w->parent->rc.top);
+        rect_offset(&rc_new_notify, -w->parent->rc.left, -w->parent->rc.top);
     }
-    message_data data;
-    memset(&data, 0, sizeof(data));
-    data.pos_changed.rc_old = &rc_old;
-    data.pos_changed.rc_new = &rc_new;
-    handler_call(w->h, WM_POSCHANGED, &data);
+
+    if (!rect_equal(&rc_old_notify, &rc_new_notify))
+    {
+        message_data data;
+        memset(&data, 0, sizeof(data));
+        data.pos_changed.rc_old = &rc_old_notify;
+        data.pos_changed.rc_new = &rc_new_notify;
+        handler_call(w->h, WM_POSCHANGED, &data);
+    }
+
     return 1;
+}
+
+int window_set_pos(window *w, const rect *rc)
+{
+    // Convert to screen coords and call helper
+    rect rc_new = *rc;
+    if (w->parent)
+        rect_offset(&rc_new, w->parent->rc.left, w->parent->rc.top);
+    return set_pos_helper(w, &rc_new);
 }
 
 window *window_find_window(window *w, int id)
