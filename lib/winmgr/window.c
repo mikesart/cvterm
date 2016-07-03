@@ -41,15 +41,15 @@ uint32_t winmgr_proc(winmgr *wm, int id, const message_data *data);
 void window_invalidate_rect(window *w, const rect *rc);
 static winmgr *s_winmgr;
 
-window *winmgr_init()
+int winmgr_init()
 {
     winmgr *wm = s_winmgr;
     if (wm)
-        return wm->root;
+        return 1;
 
     // Initialize messaging
     if (!message_init(sizeof(message_data)))
-        return NULL;
+        return 0;
 
     // Init ncurses mode
     initscr();
@@ -90,7 +90,7 @@ window *winmgr_init()
         if (pipe(s_resize_pipe))
         {
             winmgr_shutdown();
-            return NULL;
+            return 0;
         }
         struct sigaction action;
         action.sa_handler = sigwinch_signal_handler;
@@ -99,12 +99,12 @@ window *winmgr_init()
         if (sigaction(SIGWINCH, &action, &s_sigwinch_sigaction_old) < 0)
         {
             winmgr_shutdown();
-            return NULL;
+            return 0;
         }
         s_sigwinch_installed = 1;
     }
 
-    return wm->root;
+    return 1;
 }
 
 void winmgr_shutdown()
@@ -263,11 +263,20 @@ uint32_t winmgr_proc(winmgr *wm, int id, const message_data *data)
 window *window_create(window *parent, const rect *rc, handler h, int id)
 {
     winmgr *wm = s_winmgr;
-    if (parent == NULL)
+    if (!parent)
         parent = wm->root;
 
     // Coords passed in are parent relative. Make them screen relative.
-    rect rcT = *rc;
+    rect rcT;
+    if (rc == NULL)
+    {
+        rect_set(&rcT, 0, 0, 1, 1);
+        rc = &rcT;
+    }
+    else
+    {
+        rcT = *rc;
+    }
     rect_offset(&rcT, parent->rc.left, parent->rc.top);
 
     // Clip to the screen to work around ncurses behavior
@@ -276,7 +285,7 @@ window *window_create(window *parent, const rect *rc, handler h, int id)
     // A window can be visible or hidden, or a window can be visible but without
     // ncurses WINDOW (like a container of other windows).
     WINDOW *win = newwin(rc->bottom - rc->top, rc->right - rc->left, rc->top, rc->left);
-    if (win == NULL)
+    if (!win)
         return NULL;
     return new_window(parent->wm, parent, win, &rcT, h, id);
 }
@@ -318,10 +327,8 @@ window *new_window(winmgr *wm, window *parent, WINDOW *win, const rect *rc, hand
 void window_destroy(window *w)
 {
     // Destroy its children first
-    for (window *wT = w->child; wT != NULL; wT = w->child)
-    {
-        window_destroy(wT);
-    }
+    while (w->child)
+        window_destroy(w->child);
 
     handler_call(w->h, WM_DESTROY, NULL);
 
@@ -352,12 +359,21 @@ void window_destroy(window *w)
 handler window_set_handler(window *w, handler h)
 {
     winmgr *wm = s_winmgr;
-    if (w == NULL)
+    if (!w)
         w = wm->root;
 
     handler old = w->h;
     w->h = h;
     return old;
+}
+
+handler window_handler(window *w)
+{
+    winmgr *wm = s_winmgr;
+    if (!w)
+        w = wm->root;
+
+    return w->h;
 }
 
 void window_set_visible(window *w, int visible)
@@ -408,7 +424,7 @@ void window_invalidate_rect(window *w, const rect *rc)
 void window_invalidate(window *w)
 {
     winmgr *wm = s_winmgr;
-    if (w == NULL)
+    if (!w)
         w = wm->root;
 
     if (!w->visible)
@@ -430,7 +446,7 @@ void window_invalidate(window *w)
 WINDOW *window_WIN(window *w)
 {
     winmgr *wm = s_winmgr;
-    if (w == NULL)
+    if (!w)
         w = wm->root;
 
     return w->win;
@@ -512,10 +528,16 @@ int set_pos_helper(window *w, const rect *rc)
 
     if (!rect_equal(&rc_old_notify, &rc_new_notify))
     {
+
         message_data data;
         memset(&data, 0, sizeof(data));
         data.pos_changed.rc_old = &rc_old_notify;
         data.pos_changed.rc_new = &rc_new_notify;
+        if (rc_old_notify.right - rc_old_notify.left != rc_new_notify.right - rc_new_notify.left ||
+            rc_old_notify.bottom - rc_old_notify.top != rc_new_notify.bottom - rc_new_notify.top)
+        {
+            data.pos_changed.resized = 1;
+        }
         handler_call(w->h, WM_POSCHANGED, &data);
     }
 
@@ -534,7 +556,7 @@ int window_set_pos(window *w, const rect *rc)
 window *window_find_window(window *w, int id)
 {
     winmgr *wm = s_winmgr;
-    if (w == NULL)
+    if (!w)
         w = wm->root;
 
     for (window *child = w->child; child != NULL; child = child->next)
@@ -549,7 +571,7 @@ window *window_find_window(window *w, int id)
 void window_rect(window *w, rect *rc)
 {
     winmgr *wm = s_winmgr;
-    if (w == NULL)
+    if (!w)
         w = wm->root;
 
     *rc = w->rc;

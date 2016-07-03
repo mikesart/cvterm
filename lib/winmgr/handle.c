@@ -89,7 +89,7 @@ handle handle_alloc(void *ptr)
         }
         else
         {
-            table->entries = (handle_entry *)realloc(table->entries, sizeof(handle_entry) * table->count + HANDLE_COUNT_INCREMENT);
+            table->entries = (handle_entry *)realloc(table->entries, sizeof(handle_entry) * (table->count + HANDLE_COUNT_INCREMENT));
         }
         memset(&table->entries[table->count], 0, sizeof(handle_entry) * HANDLE_COUNT_INCREMENT);
 

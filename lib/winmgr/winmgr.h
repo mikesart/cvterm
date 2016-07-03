@@ -5,5 +5,6 @@
 #include "message.h"
 #include "rect.h"
 #include "window.h"
+#include "layout.h"
 
 #endif // __WINMGR_H__

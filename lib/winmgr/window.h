@@ -14,7 +14,8 @@ enum messages
     WM_DESTROY,
     WM_PAINT,
     WM_POSCHANGED,
-    WM_USER = 1000
+    WM_GETMINSIZE,
+    WM_USER = 0x1000
 };
 
 typedef union
@@ -28,12 +29,20 @@ typedef union
     {
         const rect *rc_old;
         const rect *rc_new;
+        int resized;
     } pos_changed;
 
     struct
     {
         window *w;
     } focus_change;
+
+    struct
+    {
+        int *width;
+        int *height;
+    } size_min;
+
 } message_data;
 
 typedef struct
@@ -42,7 +51,7 @@ typedef struct
     message_data data;
 } message;
 
-window *winmgr_init();
+int winmgr_init();
 void winmgr_shutdown();
 void winmgr_update();
 int winmgr_resize_fd();
@@ -55,6 +64,7 @@ void window_set_visible(window *w, int visible);
 int window_set_pos(window *w, const rect *rc);
 window *window_find_window(window *w, int id);
 handler window_set_handler(window *w, handler h);
+handler window_handler(window *w);
 void window_rect(window *w, rect *rc);
 WINDOW *window_WIN();
 

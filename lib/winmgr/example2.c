@@ -8,9 +8,6 @@
 #define CLOG_MAIN
 #include "clog.h"
 
-#define ID_CHILD_1 1
-#define ID_CHILD_2 2
-
 typedef struct
 {
     window *w;
@@ -58,68 +55,14 @@ uint32_t testwin_proc(testwin *t, int id, const message_data *data)
     return 0;
 }
 
-testwin *testwin_create(const char *message, const rect *rc, int id)
+testwin *testwin_create(const char *message)
 {
     testwin *t = malloc(sizeof(testwin));
     memset(t, 0, sizeof(*t));
     strncpy(t->message, message, sizeof(t->message) - 1);
     t->h = handler_create(t, (handler_proc)testwin_proc);
-    t->w = window_create(NULL, rc, t->h, id);
+    t->w = window_create(NULL, NULL, t->h, 0);
     return t;
-}
-
-typedef struct
-{
-    handler h;
-    handler h_old;
-} root;
-
-void get_child_rect(int id, rect *rc)
-{
-    rect rc_parent;
-    window_rect(NULL, &rc_parent);
-
-    if (id == ID_CHILD_1)
-        rect_set(rc, 0, 0, (rc_parent.right - rc_parent.left) / 2, rc_parent.bottom);
-
-    if (id == ID_CHILD_2)
-        rect_set(rc, (rc_parent.right - rc_parent.left) / 2, 0, rc_parent.right, rc_parent.bottom);
-}
-
-uint32_t root_proc(root *r, int id, const message_data *data)
-{
-    switch (id) {
-    case WM_POSCHANGED:
-        {
-            rect rc;
-            get_child_rect(ID_CHILD_1, &rc);
-            window_set_pos(window_find_window(NULL, ID_CHILD_1), &rc);
-            get_child_rect(ID_CHILD_2, &rc);
-            window_set_pos(window_find_window(NULL, ID_CHILD_2), &rc);
-        }
-        break;
-
-    case WM_DESTROY:
-        {
-            handler h_old = r->h_old;
-            handler_destroy(r->h);
-            free(r);
-            return handler_call(h_old, id, data);
-        }
-        break;
-    }
-
-    return handler_call(r->h_old, id, data);
-}
-
-
-root *root_create()
-{
-    root *r = malloc(sizeof(root));
-    memset(r, 0, sizeof(*r));
-    r->h = handler_create(r, (handler_proc)root_proc);
-    r->h_old = window_set_handler(NULL, r->h);
-    return r;
 }
 
 void main_loop()
@@ -178,17 +121,16 @@ int main(int argc, char **argv)
         return 1;
     }
 
-    // The root will manage two children.
-    root_create();
-
-    rect rc;
-    get_child_rect(ID_CHILD_1, &rc);
-    testwin_create("child1", &rc, ID_CHILD_1);
-    get_child_rect(ID_CHILD_2, &rc);
-    testwin_create("child2", &rc, ID_CHILD_2);
+    laymgr *lm = laymgr_create(NULL);
+    layout *lay1 = laymgr_root(lm);
+    layout_set_window(lay1, testwin_create("child1")->w);
+    layout *lay2 = layout_split(lay1, testwin_create("child2")->w, 1, SIZE_HALF, DIR_DOWN);
+    layout *lay3 = layout_split(lay2, testwin_create("child3")->w, 1, SIZE_HALF, DIR_RIGHT);
+    layout *lay4 = layout_split(lay3, testwin_create("child4")->w, 1, SIZE_HALF, DIR_UP);
 
     main_loop();
 
+    laymgr_destroy(lm);
     winmgr_shutdown();
 
     clog_free(0);
