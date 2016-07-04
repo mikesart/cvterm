@@ -228,7 +228,45 @@ void layout_rect(layout *lay, rect *rc)
     }
 }
 
-void adjust_layout_size(layout *lay, int split)
+void adjust_size_helper(layout *lay, int vert, int size_adjust)
+{
+    // Adjust the size of this layout.
+    if (lay->parent->vert == vert)
+        lay->size += size_adjust;
+
+    if (lay->child)
+    {
+        if (lay->vert != vert)
+        {
+            for (layout *child = lay->child; child != NULL; child = child->next)
+            {
+                adjust_size_helper(child, vert, size_adjust);
+            }
+        }
+        else
+        {
+            // Distribute the size adjustment proportionally among children.
+            // First add up the total client space.
+            int child_size_total = 0;
+            for (layout *child = lay->child; child != NULL; child = child->next)
+                child_size_total += child->size;
+
+            // Add in proportional size to each child layout
+            float scale = 1.0f + (float)size_adjust / (float)child_size_total;
+            float size_scaled = 0;
+            for (layout *child = lay->child; child != NULL; child = child->next)
+            {
+                size_scaled += (float)child->size * scale;
+                int size_new = (int)(size_scaled + 0.5f);
+                if (child->size != size_new)
+                    adjust_size_helper(child, vert, size_new - child->size);
+                size_scaled -= size_new;
+            }
+        }
+    }
+}
+
+void adjust_size(layout *lay, int split)
 {
     // lay is the layout being added or removed. Adjust the size of the
     // adjacent layout, and account for splitter visibility.
@@ -239,9 +277,10 @@ void adjust_layout_size(layout *lay, int split)
             // lay has been inserted first, so adjust the size of
             // the next layout. If it now has a splitter, adjust
             // for that as well.
-            lay->next->size += (split ? -lay->size : lay->size);
+            int size_adjust = (split ? -lay->size : lay->size);
             if (lay->next->spltr)
-                lay->next->size += (split ? -1 : 1);
+                size_adjust += (split ? -1 : 1);
+            adjust_size_helper(lay->next, lay->parent->vert, size_adjust);
         }
     }
     else
@@ -252,9 +291,10 @@ void adjust_layout_size(layout *lay, int split)
             prev = prev->next;
 
         // Add lay's size and splitter size to prev
-        prev->size += (split ? -lay->size : lay->size);
+        int size_adjust = (split ? -lay->size : lay->size);
         if (lay->spltr)
-            prev->size += (split ? -1 : 1);
+            size_adjust += (split ? -1 : 1);
+        adjust_size_helper(prev, lay->parent->vert, size_adjust);
     }
 }
 
@@ -417,7 +457,7 @@ layout *create_inline_split(layout *ref, window *client, int split, int size, in
     }
 
     // Adjust layout size and async update
-    adjust_layout_size(lay, 1);
+    adjust_size(lay, 1);
     laymgr_update(ref->lm, true);
     return lay;
 }
@@ -607,7 +647,7 @@ void layout_close_helper(layout *lay, int promote)
     if (lay->parent != NULL)
     {
         // Adjust the adjacent layout size before removing this layout.
-        adjust_layout_size(lay, 0);
+        adjust_size(lay, 0);
 
         // Remove this layout from the list
         layout_list_remove(lay);
