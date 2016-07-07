@@ -27,7 +27,7 @@ layout *laymgr_find(laymgr *lm, window *w);
 void layout_rect(layout *lay, rect *rc);
 int layout_set_window(layout *lay, window *w);
 window *layout_window(layout *lay);
-layout *layout_split(layout *lay, window *w, int with_splitter, int size, int dir);
+layout *layout_split(layout *lay, window *w, int splitter, int size, int dir);
 void layout_close(layout *lay);
 
 #endif // __LAYOUT_H__

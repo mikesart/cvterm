@@ -48,7 +48,7 @@ struct layout
     // if client == NULL, layout is a container of layouts in a flow direction.
     window *client;
 
-    // layouts can optionally have splitters, layed out in the order of splitter
+    // Layouts can optionally have splitters, layed out in the order of splitter
     // then client in a given flow direction. The splitter for the first
     // layout is always NULL.
     splitter *spltr;
@@ -57,28 +57,39 @@ struct layout
     // of this layout, this field isn't used.
     int vert;
 
-    // size of the layout measured in the parent's flow direction. This is the size
-    // of the space reserved for the client window. Doesn't include the splitter.
+    // Actual size of the layout measured in the parent's flow direction.
+    // Doesn't include the splitter.
     int size;
+
+    // Desired percentage of the parent's layout space allocated to this layout.
+    // Used when sizing and/or persisting.
+    float pct;
 };
 
 layout *layout_alloc(laymgr *lm, layout *parent, window *client, int size);
 void layout_free(layout *lay);
 void laymgr_update(laymgr *lm, int async);
 void layout_validate(layout *lay);
+void update_child_size(layout *parent, int vert, int size_changed);
 
 uint32_t host_proc(laymgr *lm, int id, const message_data *data)
 {
     switch (id)
     {
-// TODO(scottlu): handle host window resizing
-#if 0
     case WM_POSCHANGED:
         if (data->pos_changed.resized)
         {
+            int height_old = data->pos_changed.rc_old->bottom - data->pos_changed.rc_old->top;
+            int height_new = data->pos_changed.rc_new->bottom - data->pos_changed.rc_new->top;;
+            if (height_old != height_new)
+                update_child_size(lm->root, 0, height_new - height_old);
+            int width_old = data->pos_changed.rc_old->right - data->pos_changed.rc_old->left;
+            int width_new = data->pos_changed.rc_new->right - data->pos_changed.rc_new->left;
+            if (width_old != width_new)
+                update_child_size(lm->root, 1, width_new - width_old);
+            laymgr_update(lm, true);
         }
         break;
-#endif
 
     case LM_UPDATE:
         laymgr_update(lm, 0);
@@ -228,79 +239,73 @@ void layout_rect(layout *lay, rect *rc)
     }
 }
 
-void adjust_size_helper(layout *lay, int vert, int size_adjust)
+void update_child_size(layout *parent, int vert, int size_changed)
 {
-    // Adjust the size of this layout.
-    if (lay->parent->vert == vert)
-        lay->size += size_adjust;
+    if (!parent->child)
+        return;
 
-    if (lay->child)
+    if (parent->vert != vert)
     {
-        if (lay->vert != vert)
+        for (layout *child = parent->child; child != NULL; child = child->next)
         {
-            for (layout *child = lay->child; child != NULL; child = child->next)
-            {
-                adjust_size_helper(child, vert, size_adjust);
-            }
-        }
-        else
-        {
-            // Distribute the size adjustment proportionally among children.
-            // First add up the total client space.
-            int child_size_total = 0;
-            for (layout *child = lay->child; child != NULL; child = child->next)
-                child_size_total += child->size;
-
-            // Add in proportional size to each child layout
-            float scale = 1.0f + (float)size_adjust / (float)child_size_total;
-            float size_scaled = 0;
-            for (layout *child = lay->child; child != NULL; child = child->next)
-            {
-                size_scaled += (float)child->size * scale;
-                int size_new = (int)(size_scaled + 0.5f);
-                if (child->size != size_new)
-                    adjust_size_helper(child, vert, size_new - child->size);
-                size_scaled -= size_new;
-            }
-        }
-    }
-}
-
-void adjust_size(layout *lay, int split)
-{
-    // lay is the layout being added or removed. Adjust the size of the
-    // adjacent layout, and account for splitter visibility.
-    if (lay->parent->child == lay)
-    {
-        if (lay->next)
-        {
-            // lay has been inserted first, so adjust the size of
-            // the next layout. If it now has a splitter, adjust
-            // for that as well.
-            int size_adjust = (split ? -lay->size : lay->size);
-            if (lay->next->spltr)
-                size_adjust += (split ? -1 : 1);
-            adjust_size_helper(lay->next, lay->parent->vert, size_adjust);
+            update_child_size(child, vert, size_changed);
         }
     }
     else
     {
-        // Find the layout just before lay.
-        layout *prev = lay->parent->child;
-        while (prev->next != lay)
-            prev = prev->next;
+        // First add up the total client space.
+        int child_size_total = 0;
+        for (layout *child = parent->child; child != NULL; child = child->next)
+            child_size_total += child->size;
+        child_size_total += size_changed;
 
-        // Add lay's size and splitter size to prev
-        int size_adjust = (split ? -lay->size : lay->size);
-        if (lay->spltr)
-            size_adjust += (split ? -1 : 1);
-        adjust_size_helper(prev, lay->parent->vert, size_adjust);
+        // Allocate by child layout percentage
+        int size_remaining = child_size_total;
+        for (layout *child = parent->child; child != NULL; child = child->next)
+        {
+            int size_new = child->pct * child_size_total + 0.5f;
+            if (size_new > size_remaining)
+                size_new = size_remaining;
+            size_changed = size_new - child->size;
+            if (size_changed)
+            {
+                child->size = size_new;
+                if (child->child)
+                    update_child_size(child, vert, size_changed);
+            }
+            size_remaining -= size_new;
+        }
     }
 }
 
-void layout_set_split(layout *lay, int split)
+void update_child_pct(layout *parent)
 {
-    if (split)
+    // Calc total child size
+    int child_size_total = 0;
+    for (layout *child = parent->child; child != NULL; child = child->next)
+        child_size_total += child->size;
+
+    // Update each child's pct of total
+    for (layout *child = parent->child; child != NULL; child = child->next)
+        child->pct = (float)child->size / (float)child_size_total;
+}
+
+void adjust_size(layout *lay, int size_adjust)
+{
+    // Update children sizes
+    update_child_size(lay, lay->parent->vert, size_adjust);
+
+    // Adjust the size of lay
+    lay->size += size_adjust;
+
+    // Update sibling size percentages
+    if (lay->parent)
+        update_child_pct(lay->parent);
+}
+
+void set_splitter_visible(layout *lay, int visible)
+{
+    if (visible)
     {
         if (!lay->spltr)
             lay->spltr = splitter_create(lay->lm->host, lay);
@@ -328,11 +333,11 @@ layout *layout_alloc(laymgr *lm, layout *parent, window *client, int size)
 
 void layout_free(layout *lay)
 {
-    layout_set_split(lay, 0);
+    set_splitter_visible(lay, 0);
     free(lay);
 }
 
-int check_split_size(layout *ref, window *client, int split, int size_requested, int dir)
+int check_split_size(layout *ref, window *client, int splitter, int size_requested, int dir)
 {
     // ref will be split. Get the min size for ref to make sure
     // the resulting split is large enough for ref. Does not include splitter
@@ -356,12 +361,12 @@ int check_split_size(layout *ref, window *client, int split, int size_requested,
     if (IS_VERT(dir))
     {
         size_ref_min = width_ref_min;
-        size_client_min = width_client_min + split ? 1 : 0;
+        size_client_min = width_client_min + splitter ? 1 : 0;
     }
     else
     {
         size_ref_min = height_ref_min;
-        size_client_min = height_client_min + split ? 1 : 0;
+        size_client_min = height_client_min + splitter ? 1 : 0;
     }
 
     // 1 if the split will be inline with the current parent flow.
@@ -411,14 +416,14 @@ int check_split_size(layout *ref, window *client, int split, int size_requested,
     }
 }
 
-layout *create_inline_split(layout *ref, window *client, int split, int size, int dir)
+layout *create_inline_split(layout *ref, window *client, int splitter, int size, int dir)
 {
     // The no parent case is the root case and isn't handled here.
     if (!ref->parent)
         return NULL;
 
     // If no room to split, error
-    size = check_split_size(ref, client, split, size, dir);
+    size = check_split_size(ref, client, splitter, size, dir);
     if (size < 0)
         return NULL;
 
@@ -426,43 +431,41 @@ layout *create_inline_split(layout *ref, window *client, int split, int size, in
     layout *lay = layout_alloc(ref->lm, ref->parent, client, size);
     if (IS_PREV(dir))
     {
-        // Insert before ref
-        layout **pplay = &ref->parent->child;
-        while (*pplay)
+        // Inserting prev direction
+        layout *layT = lay->parent->child;
+        if (layT == ref)
         {
-            if (*pplay == ref)
-            {
-                *pplay = lay;
-                lay->next = ref;
-                break;
-            }
-            pplay = &(*pplay)->next;
-        }
-
-        if (ref->parent->child == lay)
-        {
-            layout_set_split(lay->next, split);
+            // Inserting first affects the next layout
+            lay->next = ref;
+            lay->parent->child = lay;
+            adjust_size(lay->next, -lay->size - splitter);
+            set_splitter_visible(lay->next, splitter);
         }
         else
         {
-            layout_set_split(lay, split);
+            // Not first affects the prev layout
+            while (layT->next != ref)
+                layT = layT->next;
+            lay->next = ref;
+            layT->next = lay;
+            adjust_size(layT, -lay->size - splitter);
+            set_splitter_visible(lay, splitter);
         }
     }
     else
     {
-        // Insert after ref
+        // Inserting next affects ref
         lay->next = ref->next;
         ref->next = lay;
-        layout_set_split(lay, split);
+        adjust_size(ref, -lay->size - splitter);
+        set_splitter_visible(lay, splitter);
     }
 
-    // Adjust layout size and async update
-    adjust_size(lay, 1);
     laymgr_update(ref->lm, true);
     return lay;
 }
 
-layout *create_child_split(layout *ref, window *client, int split, int size, int dir)
+layout *create_child_split(layout *ref, window *client, int splitter, int size, int dir)
 {
     // Create a layout container with the desired flow direction and move 
     // ref into this container as a child, and then split ref from there.
@@ -473,13 +476,14 @@ layout *create_child_split(layout *ref, window *client, int split, int size, int
 
     // First see if the size is big enough to split. Note the split direction isn't the same
     // as the parent's flow direction.
-    size = check_split_size(ref, client, split, size, dir);
+    size = check_split_size(ref, client, splitter, size, dir);
     if (size < 0)
         return NULL;
 
     layout *cont = layout_alloc(ref->lm, ref->parent, NULL, ref->size);
-    layout_set_split(cont, ref->spltr != NULL);
+    set_splitter_visible(cont, ref->spltr != NULL);
     cont->vert = DIR_VERT(dir);
+    cont->pct = ref->pct;
 
     // Replace ref with cont
     if (!ref->parent)
@@ -506,33 +510,34 @@ layout *create_child_split(layout *ref, window *client, int split, int size, int
     ref->parent = cont;
     ref->next = NULL;
     cont->child = ref;
-    layout_set_split(ref, 0);
+    set_splitter_visible(ref, 0);
 
     // ref's size is the size of the container in the requested flow direction
     rect rc;
     layout_rect(cont, &rc);
     ref->size = DIR_VERT(dir) ? rc.right - rc.left : rc.bottom - rc.top;
+    ref->pct = 1.0f;
        
     // Now split this ref, which will be an inline split. This should succeed
     // because of the earlier size check.
-    layout *result = layout_split(ref, client, split, size, dir);
+    layout *result = layout_split(ref, client, splitter, size, dir);
     assert(result != NULL);
     return result;
 }
 
-layout *layout_split(layout *ref, window *w, int split, int size, int dir)
+layout *layout_split(layout *ref, window *w, int splitter, int size, int dir)
 {
     // Split in the direction of the parent flow?
     if (ref->parent && DIR_VERT(dir) == ref->parent->vert)
     {
         // This creates a new layout in line with ref
-        return create_inline_split(ref, w, split, size, dir);
+        return create_inline_split(ref, w, splitter, size, dir);
     }
     else
     {
         // This re-parents ref to be a child of a new containing parent
         // with a flow in the requested direction.
-        return create_child_split(ref, w, split, size, dir);
+        return create_child_split(ref, w, splitter, size, dir);
     }
 }
 
@@ -599,10 +604,11 @@ void layout_promote_child(layout *child)
         layout_list_remove(parent);
 
         // Adopt the parent's splitter state
-        layout_set_split(child, parent->spltr != NULL);
+        set_splitter_visible(child, parent->spltr != NULL);
 
-        // Adopt the parent's size
+        // Adopt the parent's size and update pcts
         child->size = parent->size;
+        update_child_pct(child->parent);
 
         // Free the parent
         layout_free(parent);
@@ -630,10 +636,11 @@ void layout_promote_child(layout *child)
 
         // The first child's splitter state needs to match
         // that of the parent.
-        layout_set_split(child->next, child->spltr != NULL);
-
-        // Unlink and free
+        set_splitter_visible(child->next, child->spltr != NULL);
         layout_list_remove(child);
+
+        // Update pcts now that child isn't part of list
+        update_child_pct(child->parent);
         layout_free(child);
     }
 }
@@ -647,14 +654,27 @@ void layout_close_helper(layout *lay, int promote)
     if (lay->parent != NULL)
     {
         // Adjust the adjacent layout size before removing this layout.
-        adjust_size(lay, 0);
-
-        // Remove this layout from the list
-        layout_list_remove(lay);
-
-        // Make sure the first child doesn't have a splitter
-        if (lay->parent->child)
-            layout_set_split(lay->parent->child, 0);
+        layout *layT = lay->parent->child;
+        if (lay == layT)
+        {
+            // Removing the first in the list means adjust the next layout size
+            layout *next = lay->next;
+            lay->parent->child = next;
+            if (next)
+            {
+                adjust_size(next, lay->size + (lay->next->spltr ? 1 : 0));
+                set_splitter_visible(next, 0);
+            }
+        }
+        else
+        {
+            // Removing somewhere not the first means adjust the previous
+            // layout size.
+            while (layT->next != lay)
+                layT = layT->next;
+            layT->next = lay->next;
+            adjust_size(layT, lay->size + (lay->spltr ? 1 : 0));
+        }
 
         if (promote)
         {
