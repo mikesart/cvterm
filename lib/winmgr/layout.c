@@ -693,7 +693,7 @@ void layout_close(layout *lay)
     layout_close_helper(lay, 1);
 }
 
-void update_layout_tree(layout *lay, const rect *rc)
+void apply_layout(layout *lay, const rect *rc)
 {
     // Handle splitter layout
     rect rcL = *rc;
@@ -727,13 +727,13 @@ void update_layout_tree(layout *lay, const rect *rc)
         if (lay->vert)
         {
             rcC.right = rcC.left + splitter_size + child->size;
-            update_layout_tree(child, &rcC);
+            apply_layout(child, &rcC);
             rcC.left = rcC.right;
         }
         else
         {
             rcC.bottom = rcC.top + splitter_size + child->size;
-            update_layout_tree(child, &rcC);
+            apply_layout(child, &rcC);
             rcC.top = rcC.bottom;
         }
     }
@@ -763,7 +763,7 @@ void laymgr_update(laymgr *lm, int async)
     // Update layout positions
     rect rc;
     window_rect(lm->host, &rc);
-    update_layout_tree(lm->root, &rc);
+    apply_layout(lm->root, &rc);
 }
 
 void layout_validate(layout *lay)
