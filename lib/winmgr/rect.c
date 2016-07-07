@@ -92,3 +92,13 @@ int rect_equal(const rect *rc1, const rect *rc2)
     return (rc1->left == rc2->left && rc1->top == rc2->top &&
         rc1->right == rc2->right && rc1->bottom == rc2->bottom);
 }
+
+int rect_width(const rect *rc)
+{
+    return rc->right - rc->left;
+}
+
+int rect_height(const rect *rc)
+{
+    return rc->bottom - rc->top;
+}

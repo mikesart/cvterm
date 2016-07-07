@@ -468,27 +468,22 @@ int set_pos_helper(window *w, const rect *rc)
     if (rect_equal(&rc_new, &rc_old))
         return 1;
 
-    int height_new = rc_new.bottom - rc_new.top;
-    int width_new = rc_new.right - rc_new.left;
-
     if (rc_new.left != rc_old.left || rc_new.top != rc_old.top)
     {
-        // Pre-size to a size that won't cause mvwin to fail.
-        int width_adj = (rc_old.left + width_new) - wm->root->rc.right;
-        if (width_adj < 0)
-            width_adj = 0;
-        int height_adj = (rc_old.top + height_new) - wm->root->rc.bottom;
-        if (height_adj < 0)
-            height_adj = 0;
-        if (width_adj != 0 || height_adj != 0)
+        // mvwin fails if any part of the window would be offscreen.
+        // To prevent this, call wresize first so that the mvwin
+        // won't result in any parts offscreen.
+        rect rc_pre = rc_old;
+        rect_offset(&rc_pre, rc_new.left - rc_old.left, rc_new.top - rc_old.top);
+        if (rect_intersect(&rc_pre, &rc_pre, &wm->root->rc))
         {
-            if (wresize(w->win, height_new - height_adj, width_new - width_adj) == ERR)
+            if (wresize(w->win, rect_height(&rc_pre), rect_width(&rc_pre)) == ERR)
                 return 0;
         }
         if (mvwin(w->win, rc_new.top, rc_new.left) == ERR)
             return 0;
     }
-    if (wresize(w->win, height_new, width_new) == ERR)
+    if (wresize(w->win, rect_height(&rc_new), rect_width(&rc_new)) == ERR)
         return 0;
     w->rc = rc_new;
 

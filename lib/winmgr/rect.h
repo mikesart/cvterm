@@ -17,5 +17,7 @@ void rect_union(rect *result, const rect *rc1, const rect *rc2);
 int rect_intersect(rect *result, const rect *rc1, const rect *rc2);
 int rect_empty(const rect *rc);
 int rect_equal(const rect *rc1, const rect *rc2);
+int rect_width(const rect *rc);
+int rect_height(const rect *rc);
 
 #endif // __RECT_H__
