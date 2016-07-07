@@ -12,37 +12,37 @@ typedef struct
 {
     window *w;
     handler h;
+} client;
+
+typedef struct
+{
+    window *w;
+    handler h;
     char message[128];
+} statusbar;
+
+typedef struct
+{
+    window *w;
+    handler h;
+    client *c;
+    statusbar *sb;
 } testwin;
 
 uint32_t testwin_proc(testwin *t, int id, const message_data *data)
 {
     switch (id)
     {
-    case WM_PAINT:
+    case WM_POSCHANGED:
+        if (data->pos_changed.resized)
         {
-            WINDOW *win = window_WIN(t->w);
-            werase(win);
-            wmove(win, 0, 0);
-            wborder(win, ACS_VLINE, ACS_VLINE, ACS_HLINE, ACS_HLINE, ACS_ULCORNER,
-                ACS_URCORNER, ACS_LLCORNER, ACS_LRCORNER);
-
-            // Get the ncurses window size to check for size mismatch
-            int cx, cy;
-            getmaxyx(win, cy, cx);
-            int x = (cx - 10) / 2;
-            int y = (cy - 3) / 2;
-            wmove(win, y, x);
-            waddstr(win, t->message);
-            char str[32];
-            sprintf(str, "ncurses: %d,%d", cx, cy);
-            wmove(win, y + 1, x);
-            waddstr(win, str);
+            int width = rect_width(data->pos_changed.rc_new);
+            int height = rect_height(data->pos_changed.rc_new);
             rect rc;
-            window_rect(t->w, &rc);
-            sprintf(str, "window: %d,%d", rc.right - rc.left, rc.bottom - rc.top);
-            wmove(win, y + 2, x);
-            waddstr(win, str);
+            rect_set(&rc, 0, 0, width, height - 1);
+            window_set_pos(t->c->w, &rc);
+            rect_set(&rc, 0, height - 1, width, height);
+            window_set_pos(t->sb->w, &rc);
         }
         break;
 
@@ -55,13 +55,95 @@ uint32_t testwin_proc(testwin *t, int id, const message_data *data)
     return 0;
 }
 
+uint32_t client_proc(client *c, int id, const message_data *data)
+{
+    switch (id)
+    {
+    case WM_PAINT:
+        {
+            WINDOW *win = window_WIN(c->w);
+            werase(win);
+
+            // Get the ncurses window size to check for size mismatch
+            int cx, cy;
+            getmaxyx(win, cy, cx);
+            int x = (cx - 10) / 2;
+            int y = (cy - 3) / 2;
+            wmove(win, y, x);
+            char str[32];
+            sprintf(str, "ncurses: %d,%d", cx, cy);
+            wmove(win, y, x);
+            waddstr(win, str);
+            rect rc;
+            window_rect(c->w, &rc);
+            sprintf(str, "window: %d,%d", rc.right - rc.left, rc.bottom - rc.top);
+            wmove(win, y + 1, x);
+            waddstr(win, str);
+        }
+        break;
+
+    case WM_DESTROY:
+        handler_destroy(c->h);
+        free(c);
+        break;
+    }
+
+    return 0;
+}
+
+uint32_t statusbar_proc(statusbar *sb, int id, const message_data *data)
+{
+    switch (id)
+    {
+    case WM_PAINT:
+        {
+            WINDOW *win = window_WIN(sb->w);
+            rect rc;
+            window_rect(sb->w, &rc);
+            wattron(win, A_REVERSE);
+            mvwhline(win, 0, 0, ' ', rc.right - rc.left);
+            mvwprintw(win, 0, 0, sb->message);
+            wattroff(win, A_REVERSE);
+        }
+        break;
+
+    case WM_DESTROY:
+        handler_destroy(sb->h);
+        free(sb);
+        break;
+    }
+
+    return 0;
+}
+
+client *client_create(window *parent)
+{
+    client *c = malloc(sizeof(statusbar));
+    memset(c, 0, sizeof(*c));
+    c->h = handler_create(c, (handler_proc)client_proc);
+    c->w = window_create(parent, NULL, c->h, 0);
+    return c;
+}
+
+statusbar *statusbar_create(window *parent, const char *message)
+{
+    statusbar *sb = malloc(sizeof(statusbar));
+    memset(sb, 0, sizeof(*sb));
+    strncpy(sb->message, message, sizeof(sb->message) - 1);
+    sb->h = handler_create(sb, (handler_proc)statusbar_proc);
+    sb->w = window_create(parent, NULL, sb->h, 0);
+    return sb;
+}
+
 testwin *testwin_create(const char *message)
 {
     testwin *t = malloc(sizeof(testwin));
     memset(t, 0, sizeof(*t));
-    strncpy(t->message, message, sizeof(t->message) - 1);
     t->h = handler_create(t, (handler_proc)testwin_proc);
     t->w = window_create(NULL, NULL, t->h, 0);
+    t->c = client_create(t->w);
+    t->sb = statusbar_create(t->w, message);
+
     return t;
 }
 
@@ -124,9 +206,9 @@ int main(int argc, char **argv)
     laymgr *lm = laymgr_create(NULL);
     layout *lay1 = laymgr_root(lm);
     layout_set_window(lay1, testwin_create("child1")->w);
-    layout *lay2 = layout_split(lay1, testwin_create("child2")->w, 1, SIZE_HALF, DIR_DOWN);
+    layout *lay2 = layout_split(lay1, testwin_create("child2")->w, 0, SIZE_HALF, DIR_DOWN);
     layout *lay3 = layout_split(lay2, testwin_create("child3")->w, 1, SIZE_HALF, DIR_RIGHT);
-    layout *lay4 = layout_split(lay3, testwin_create("child4")->w, 1, SIZE_HALF, DIR_UP);
+    layout *lay4 = layout_split(lay3, testwin_create("child4")->w, 0, SIZE_HALF, DIR_UP);
 
     main_loop();
 
