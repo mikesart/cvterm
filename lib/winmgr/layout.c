@@ -438,18 +438,19 @@ layout *create_inline_split(layout *ref, window *client, int splitter, int size,
             // Inserting first affects the next layout
             lay->next = ref;
             lay->parent->child = lay;
-            adjust_size(lay->next, -lay->size - splitter);
-            set_splitter_visible(lay->next, splitter);
+            adjust_size(ref, -lay->size - splitter);
+            set_splitter_visible(ref, splitter);
         }
         else
         {
-            // Not first affects the prev layout
+            // Inserting not first affects ref
             while (layT->next != ref)
                 layT = layT->next;
             lay->next = ref;
             layT->next = lay;
-            adjust_size(layT, -lay->size - splitter);
-            set_splitter_visible(lay, splitter);
+            adjust_size(ref, -lay->size - splitter);
+            set_splitter_visible(lay, ref->spltr != NULL);
+            set_splitter_visible(ref, splitter);
         }
     }
     else
