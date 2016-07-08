@@ -463,7 +463,8 @@ int set_pos_helper(window *w, const rect *rc)
     // if it is off screen in any way.
     if (w != wm->root)
     {
-        rect_intersect(&rc_new, &rc_new, &wm->root->rc);
+        if (!rect_intersect(&rc_new, &rc_new, &wm->root->rc))
+            return 0;
     }
     if (rect_equal(&rc_new, &rc_old))
         return 1;
