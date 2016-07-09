@@ -16,6 +16,12 @@ typedef struct layout layout;
 // the closest size that does fit will be used.
 #define SIZE_HALF -1
 
+// Edges for layout_move_edge
+#define EDGE_LEFT 0
+#define EDGE_TOP 1
+#define EDGE_RIGHT 2
+#define EDGE_BOTTOM 3
+
 // The layout hosting a window doesn't change as splits occur. However the
 // root layout may change as splits occur so instead of stashing it around
 // call laymgr_root() instead.
@@ -24,10 +30,10 @@ void laymgr_destroy(laymgr *lm);
 layout *laymgr_root(laymgr *lm);
 layout *laymgr_find(laymgr *lm, window *w);
 
-void layout_rect(layout *lay, rect *rc);
 int layout_set_window(layout *lay, window *w);
 window *layout_window(layout *lay);
 layout *layout_split(layout *lay, window *w, int splitter, int size, int dir);
 void layout_close(layout *lay);
+int layout_move_edge(layout *lay, int delta, int edge);
 
 #endif // __LAYOUT_H__

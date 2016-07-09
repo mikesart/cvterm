@@ -18,6 +18,7 @@ struct laymgr
 #define IS_VERT(dir) (!((dir) & 1))
 #define IS_PREV(dir) (!((dir) & 2))
 #define DIR_VERT(dir) (!!IS_VERT(dir))
+#define DIR_REVERSE(dir) ((dir) ^ 2)
 
 // To perform async update
 #define LM_UPDATE (WM_USER + 0x1000)
@@ -157,19 +158,19 @@ void layout_min_size(layout *lay, int *width_min, int *height_min)
 
         if (lay->vert)
         {
-            if (width_min_child > width)
-                width = width_min_child;
-            if (child->spltr)
-                height++;
-            height += height_min_child;
-        }
-        else
-        {
             if (height_min_child > height)
                 height = height_min_child;
             if (child->spltr)
                 width++;
             width += width_min_child;
+        }
+        else
+        {
+            if (width_min_child > width)
+                width = width_min_child;
+            if (child->spltr)
+                height++;
+            height += height_min_child;
         }
     }
 
@@ -692,6 +693,106 @@ void layout_close_helper(layout *lay, int promote)
 void layout_close(layout *lay)
 {
     layout_close_helper(lay, 1);
+}
+
+layout *find_move_layout(layout *lay, int edge)
+{
+    // Find the layout whose size will be adjusted
+    layout *layT = lay;
+    while (layT)
+    {
+        // Can't move an edge of the root
+        if (!layT->parent)
+            return NULL;
+
+        // If the parent isn't layed out in the direction
+        // requested to move, then try the next parent.
+        if (DIR_VERT(edge) != layT->parent->vert)
+        {
+            layT = layT->parent;
+            continue;
+        }
+
+        // Even though this layout is in a direction
+        // that matches the move direction, the edge
+        // requested to move may be in a parent.
+        if ((IS_PREV(edge) && layT == layT->parent->child) ||
+            (!IS_PREV(edge) && !layT->next))
+        {
+            layT = layT->parent;
+            continue;
+        }
+        break;
+    }
+
+    return layT;
+}
+
+int layout_move_edge(layout *lay, int delta, int edge)
+{
+    // Find the layout whose size will be adjusted
+    layout *layT = find_move_layout(lay, edge);
+
+    // Try the opposite edge if the passed in edge didn't work
+    if (!layT)
+    {
+        edge = DIR_REVERSE(edge);
+        layT = find_move_layout(lay, edge);
+        if (!layT)
+            return 0;
+    }
+
+    // If the edge is prev, then it is the previous
+    // layout will be sizing too. Otherwise it is this layout
+    // and the next layout
+    layout *lay1;
+    layout *lay2;
+    if (IS_PREV(edge))
+    {
+        layout *prev = layT->parent->child;
+        while (prev->next != layT)
+            prev = prev->next;
+        lay1 = prev;
+        lay2 = layT;
+    }
+    else
+    {
+        lay1 = layT;
+        lay2 = layT->next;
+    }
+
+    // Make sure the layout shrinking doesn't get smaller than its
+    // min size
+    if (delta < 0)
+    {
+        int width_min;
+        int height_min;
+        layout_min_size(lay1, &width_min, &height_min);
+        int size_min = lay1->parent->vert ? width_min : height_min;
+        if (lay1->size + delta < size_min)
+            delta = size_min - lay1->size;
+        if (delta >= 0)
+            return 0;
+    }
+    else
+    {
+        int width_min;
+        int height_min;
+        layout_min_size(lay2, &width_min, &height_min);
+        int size_min = lay2->parent->vert ? width_min : height_min;
+        if (lay2->size - delta < size_min)
+            delta = lay2->size - size_min;
+        if (delta <= 0)
+            return 0;
+    }
+
+    // Adjust the layout sizes
+    adjust_size(lay1, delta);
+    adjust_size(lay2, -delta);
+
+    // Update
+    laymgr_update(lay->lm, true);
+    return 1;
 }
 
 void apply_layout(layout *lay, const rect *rc)
