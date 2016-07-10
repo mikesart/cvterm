@@ -8,7 +8,7 @@
 typedef struct winmgr winmgr;
 typedef struct window window;
 
-enum messages
+enum
 {
     WM_CREATE = 1,
     WM_DESTROY,

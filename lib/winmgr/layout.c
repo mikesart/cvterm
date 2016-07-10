@@ -854,6 +854,79 @@ layout *layout_navigate_dir(layout *lay, int x, int y, int dir)
     return find_closest_layout(layT, x, y);
 }
 
+layout *find_child_ordered(layout *lay, int next)
+{
+    // Recurse down to find the lowest beginning or ending
+    // layout.
+    if (lay->child)
+    {
+        if (next)
+        {
+            return find_child_ordered(lay->child, next);
+        }
+        else
+        {
+            layout *prev = lay->child;
+            while (prev->next != NULL)
+                prev = prev->next;
+            return find_child_ordered(prev, next);
+        }
+    }
+
+    return lay;
+}
+
+layout *navigate_ordered_helper(layout *lay, int next)
+{
+    // Find the navigatable layout in the direction requested
+    layout *layT = lay;
+    while (layT)
+    {
+        if (!layT->parent)
+            return NULL;
+
+        // If we're at an end, a parent may be navigatable
+        if ((!next && layT == layT->parent->child) ||
+            (next && !layT->next))
+        {
+            layT = layT->parent;
+            continue;
+        }
+        break;
+    }
+    if (!layT)
+        return NULL;
+
+    // Next or prev is possible now; do that.
+    if (!next)
+    {
+        layout *prev = layT->parent->child;
+        while (prev->next != layT)
+            prev = prev->next;
+        layT = prev;
+    }
+    else
+    {
+        layT = layT->next;
+    }
+
+    // Now find the appropriate ordered child
+    return find_child_ordered(layT, next);
+}
+
+layout *layout_navigate_ordered(layout *lay, int next)
+{
+    // Try to go in the direction requested
+    layout *layT = navigate_ordered_helper(lay, next);
+    if (layT)
+        return layT;
+
+    // Nothing in that direction. Start at the other end.
+    for (layout *layE = lay; layE != NULL; layE = navigate_ordered_helper(layE, !next))
+        layT = layE;
+    return layT;
+}
+
 void apply_layout(layout *lay, const rect *rc)
 {
     // Handle splitter layout

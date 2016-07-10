@@ -37,5 +37,6 @@ layout *layout_split(layout *lay, window *w, int splitter, int size, int dir);
 void layout_close(layout *lay);
 int layout_move_edge(layout *lay, int delta, int edge);
 layout *layout_navigate_dir(layout *lay, int x, int y, int dir);
+layout *layout_navigate_ordered(layout *lay, int next);
 
 #endif // __LAYOUT_H__
