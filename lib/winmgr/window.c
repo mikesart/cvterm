@@ -60,8 +60,8 @@ int winmgr_init()
     // Suppress automatic echoing of typed characters
     noecho();
 
-    // Enable backspace, delete, and four arrow keys
-    keypad(stdscr, TRUE);
+    // Turn off \n creating newlines
+    nonl();
 
     // Turn off the cursor
     curs_set(0);
@@ -127,7 +127,7 @@ void winmgr_shutdown()
 
     message_shutdown();
 
-    if (s_sigwinch_installed == 1)
+    if (s_sigwinch_installed)
     {
         sigaction(SIGWINCH, &s_sigwinch_sigaction_old, NULL);
         close(s_resize_pipe[0]);
@@ -292,6 +292,12 @@ window *window_create(window *parent, const rect *rc, handler h, int id)
 
 window *new_window(winmgr *wm, window *parent, WINDOW *win, const rect *rc, handler h, int id)
 {
+    // Cause getch to be a non-blocking call
+    nodelay(win, TRUE);
+
+    // Enable backspace, delete, and four arrow keys
+    keypad(win, TRUE);
+
     window *w = malloc(sizeof(window));
     memset(w, 0, sizeof(*w));
     w->wm = wm;
@@ -573,4 +579,16 @@ void window_rect(window *w, rect *rc)
     *rc = w->rc;
     if (w->parent != NULL)
         rect_offset(rc, -w->parent->rc.left, -w->parent->rc.top);
+}
+
+void window_map_point(window *from, window *to, int *x, int *y)
+{
+    winmgr *wm = s_winmgr;
+    if (!from)
+        from = wm->root;
+    if (!to)
+        to = wm->root;
+
+    *x += from->rc.left - to->rc.top;
+    *y += from->rc.top - to->rc.top;
 }

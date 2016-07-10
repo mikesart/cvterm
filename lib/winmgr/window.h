@@ -15,6 +15,7 @@ enum messages
     WM_PAINT,
     WM_POSCHANGED,
     WM_GETMINSIZE,
+    WM_QUIT,
     WM_USER = 0x1000
 };
 
@@ -47,7 +48,7 @@ typedef union
 
 typedef struct
 {
-    message_header h;
+    MESSAGE_HEADER;
     message_data data;
 } message;
 
@@ -66,6 +67,7 @@ window *window_find_window(window *w, int id);
 handler window_set_handler(window *w, handler h);
 handler window_handler(window *w);
 void window_rect(window *w, rect *rc);
+void window_map_point(window *from, window *to, int *x, int *y);
 WINDOW *window_WIN();
 
 #endif // __WINDOW_H__

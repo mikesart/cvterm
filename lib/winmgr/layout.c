@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
+#include <limits.h>
 #include "layout.h"
 #include "splitter.h"
 
@@ -13,12 +14,6 @@ struct laymgr
     layout *root; // root layout
     int update; // 1 if a layout update needs to occur
 };
-
-// dir is passed into layout split. Convenience macros.
-#define IS_VERT(dir) (!((dir) & 1))
-#define IS_PREV(dir) (!((dir) & 2))
-#define DIR_VERT(dir) (!!IS_VERT(dir))
-#define DIR_REVERSE(dir) ((dir) ^ 2)
 
 // To perform async update
 #define LM_UPDATE (WM_USER + 0x1000)
@@ -359,7 +354,7 @@ int check_split_size(layout *ref, window *client, int splitter, int size_request
     // The split gets created on the layout edge splitting ref.
     int size_ref_min;
     int size_client_min;
-    if (IS_VERT(dir))
+    if (IS_DIR_VERT(dir))
     {
         size_ref_min = width_ref_min;
         size_client_min = width_client_min + splitter ? 1 : 0;
@@ -373,7 +368,7 @@ int check_split_size(layout *ref, window *client, int splitter, int size_request
     // 1 if the split will be inline with the current parent flow.
     // If not inline, then a container will be allocated with the
     // requested flow, and ref and the new layout will be children.
-    int inline_split = (ref->parent && DIR_VERT(dir) == ref->parent->vert) ? 1 : 0;
+    int inline_split = (ref->parent && IS_DIR_VERT(dir) == ref->parent->vert) ? 1 : 0;
 
     // Get the min sizes in the direction requested.
     // direction requested (does not include splitter).
@@ -382,7 +377,7 @@ int check_split_size(layout *ref, window *client, int splitter, int size_request
     {
         rect rc;
         layout_rect(ref, &rc);
-        if (IS_VERT(dir))
+        if (IS_DIR_VERT(dir))
         {
             size_ref_current = rc.right - rc.left;
         }
@@ -430,7 +425,7 @@ layout *create_inline_split(layout *ref, window *client, int splitter, int size,
 
     // Split ref and create a new layout
     layout *lay = layout_alloc(ref->lm, ref->parent, client, size);
-    if (IS_PREV(dir))
+    if (IS_DIR_PREV(dir))
     {
         // Inserting prev direction
         layout *layT = lay->parent->child;
@@ -484,7 +479,7 @@ layout *create_child_split(layout *ref, window *client, int splitter, int size, 
 
     layout *cont = layout_alloc(ref->lm, ref->parent, NULL, ref->size);
     set_splitter_visible(cont, ref->spltr != NULL);
-    cont->vert = DIR_VERT(dir);
+    cont->vert = IS_DIR_VERT(dir);
     cont->pct = ref->pct;
 
     // Replace ref with cont
@@ -517,7 +512,7 @@ layout *create_child_split(layout *ref, window *client, int splitter, int size, 
     // ref's size is the size of the container in the requested flow direction
     rect rc;
     layout_rect(cont, &rc);
-    ref->size = DIR_VERT(dir) ? rc.right - rc.left : rc.bottom - rc.top;
+    ref->size = IS_DIR_VERT(dir) ? rc.right - rc.left : rc.bottom - rc.top;
     ref->pct = 1.0f;
        
     // Now split this ref, which will be an inline split. This should succeed
@@ -530,7 +525,7 @@ layout *create_child_split(layout *ref, window *client, int splitter, int size, 
 layout *layout_split(layout *ref, window *w, int splitter, int size, int dir)
 {
     // Split in the direction of the parent flow?
-    if (ref->parent && DIR_VERT(dir) == ref->parent->vert)
+    if (ref->parent && IS_DIR_VERT(dir) == ref->parent->vert)
     {
         // This creates a new layout in line with ref
         return create_inline_split(ref, w, splitter, size, dir);
@@ -554,23 +549,7 @@ int layout_set_window(layout *lay, window *w)
     if (lay->child)
         return 0;
 
-    // Ensure the window fits within this layout
-    int width_min = LAYOUT_MIN_WIDTH;
-    int height_min = LAYOUT_MIN_HEIGHT;
-    message_data data;
-    data.size_min.width = &width_min;
-    data.size_min.height = &height_min;
-    handler_call(window_handler(w), WM_GETMINSIZE, &data);
-
-    // Need the size of the layout. Note the splitter isn't a concern
-    // because the window occupies the inside of the layout.
-    rect rc;
-    layout_rect(lay, &rc);
-    if (rc.right - rc.left < width_min)
-        return 0;
-    if (rc.bottom - rc.top < height_min)
-        return 0;
-
+    // Allow setting the window independent of min sizes
     lay->client = w;
     laymgr_update(lay->lm, true);
     return 1;
@@ -707,7 +686,7 @@ layout *find_move_layout(layout *lay, int edge)
 
         // If the parent isn't layed out in the direction
         // requested to move, then try the next parent.
-        if (DIR_VERT(edge) != layT->parent->vert)
+        if (IS_DIR_VERT(edge) != layT->parent->vert)
         {
             layT = layT->parent;
             continue;
@@ -716,8 +695,8 @@ layout *find_move_layout(layout *lay, int edge)
         // Even though this layout is in a direction
         // that matches the move direction, the edge
         // requested to move may be in a parent.
-        if ((IS_PREV(edge) && layT == layT->parent->child) ||
-            (!IS_PREV(edge) && !layT->next))
+        if ((IS_DIR_PREV(edge) && layT == layT->parent->child) ||
+            (!IS_DIR_PREV(edge) && !layT->next))
         {
             layT = layT->parent;
             continue;
@@ -747,7 +726,7 @@ int layout_move_edge(layout *lay, int delta, int edge)
     // and the next layout
     layout *lay1;
     layout *lay2;
-    if (IS_PREV(edge))
+    if (IS_DIR_PREV(edge))
     {
         layout *prev = layT->parent->child;
         while (prev->next != layT)
@@ -793,6 +772,86 @@ int layout_move_edge(layout *lay, int delta, int edge)
     // Update
     laymgr_update(lay->lm, true);
     return 1;
+}
+
+int interval_distance(int i, int i1, int i2)
+{
+    if (i < i1)
+    {
+        return i1 - i;
+    }
+    else if (i >= i2)
+    {
+        return i - i2;
+    }
+
+    return 0;
+}
+
+layout *find_closest_layout(layout *lay, int x, int y)
+{
+    layout *closest = NULL;
+    int dist_min = INT_MAX;
+    if (lay->child)
+    {
+        int dist;
+        rect rc;
+        layout_rect(lay, &rc);
+        for (layout *child = lay->child; child != NULL; child = child->next)
+        {
+            if (lay->vert)
+            {
+                if (child->spltr)
+                    rc.left++;
+                rc.right = rc.left + child->size;
+                dist = interval_distance(x, rc.left, rc.right - 1);
+                rc.left = rc.right;
+            }
+            else
+            {
+                if (child->spltr)
+                    rc.top++;
+                rc.bottom = rc.top + child->size;
+                dist = interval_distance(y, rc.top, rc.bottom - 1);
+                rc.top = rc.bottom;
+            }
+            if (dist < dist_min)
+            {
+                dist_min = dist;
+                closest = child;
+            }
+        }
+    }
+
+    if (closest)
+        return find_closest_layout(closest, x, y);
+
+    return lay;
+}
+
+layout *layout_navigate_dir(layout *lay, int x, int y, int dir)
+{
+    // Find the layout with the edge we want to navigate across
+    layout *layT = find_move_layout(lay, dir);
+    if (layT == NULL)
+        return NULL;
+
+    // Either prev or next
+    if (IS_DIR_PREV(dir))
+    {
+        layout *prev = layT->parent->child;
+        while (prev->next != layT)
+            prev = prev->next;
+        layT = prev;
+    }
+    else
+    {
+        layT = layT->next;
+    }
+
+    // Now find the child, if any, that is closest to x, y
+    window_map_point(lay->client, lay->lm->host, &x, &y);
+    return find_closest_layout(layT, x, y);
 }
 
 void apply_layout(layout *lay, const rect *rc)

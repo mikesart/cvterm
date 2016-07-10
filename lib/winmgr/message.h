@@ -36,11 +36,7 @@ typedef uint32_t handler;
 #define MM_USER     0xff00
 #define MM_READABLE (MM_USER + 1)
 
-typedef struct
-{
-    handler h;
-    int id;
-} message_header;
+#define MESSAGE_HEADER handler h; int id
 
 int message_init(int data_size);
 void message_shutdown();

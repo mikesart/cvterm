@@ -40,6 +40,11 @@ typedef struct
     void *user;
 } message_handler;
 
+typedef struct
+{
+    MESSAGE_HEADER;
+} message_header;
+
 typedef struct queue_item
 {
     struct queue_item *next;

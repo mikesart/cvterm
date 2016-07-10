@@ -6,11 +6,18 @@
 typedef struct laymgr laymgr;
 typedef struct layout layout;
 
-// Split direction passed in to layout_split
-#define DIR_LEFT 0
-#define DIR_UP 1
-#define DIR_RIGHT 2
-#define DIR_DOWN 3
+// Direction used in layout apis
+enum {
+    DIR_LEFT = 0,
+    DIR_UP,
+    DIR_RIGHT,
+    DIR_DOWN
+};
+
+// Convenience macros
+#define IS_DIR_VERT(dir) (!!(!((dir) & 1)))
+#define IS_DIR_PREV(dir) (!!(!((dir) & 2)))
+#define DIR_REVERSE(dir) ((dir) ^ 2)
 
 // Special size constant to pass into layout_split. If half doesn't fit,
 // the closest size that does fit will be used.
@@ -29,5 +36,6 @@ window *layout_window(layout *lay);
 layout *layout_split(layout *lay, window *w, int splitter, int size, int dir);
 void layout_close(layout *lay);
 int layout_move_edge(layout *lay, int delta, int edge);
+layout *layout_navigate_dir(layout *lay, int x, int y, int dir);
 
 #endif // __LAYOUT_H__
