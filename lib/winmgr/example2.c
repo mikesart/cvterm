@@ -29,7 +29,7 @@ typedef struct
     statusbar *sb;
 } testwin;
 
-testwin *s_focus;
+window *s_focus;
 laymgr *s_lm;
 int s_splitter;
 int s_edge;
@@ -44,9 +44,12 @@ enum
 };
 int s_cmd;
 
-testwin *testwin_add();
-void testwin_remove(testwin *t);
-#define TM_GETTESTWIN WM_USER
+#define TM_GETPTR WM_USER
+
+testwin *get_testwin(window *w)
+{
+    return (testwin *)handler_call(window_handler(w), TM_GETPTR, NULL);
+}
 
 uintptr_t testwin_proc(testwin *t, int id, const message_data *data)
 {
@@ -70,16 +73,11 @@ uintptr_t testwin_proc(testwin *t, int id, const message_data *data)
         free(t);
         break;
 
-    case TM_GETTESTWIN:
+    case TM_GETPTR:
         return (uintptr_t)t;
     }
 
     return 0;
-}
-
-testwin *get_testwin(window *w)
-{
-    return (testwin *)handler_call(window_handler(w), TM_GETTESTWIN, NULL);
 }
 
 uintptr_t client_proc(client *c, int id, const message_data *data)
@@ -129,7 +127,7 @@ uintptr_t statusbar_proc(statusbar *sb, int id, const message_data *data)
             window_rect(sb->w, &rc);
             wattron(win, A_REVERSE);
             mvwhline(win, 0, 0, ' ', rc.right - rc.left);
-            testwin *t = s_focus;
+            testwin *t = get_testwin(s_focus);
             if (t && t->sb == sb)
             {
                 wattron(win, A_BOLD);
@@ -186,56 +184,51 @@ testwin *testwin_create(const char *message)
     return t;
 }
 
-void set_focus(layout *to)
+void set_focus(window *w)
 {
-    testwin *t = s_focus;
-    if (t)
-        window_invalidate(t->w);
-    window *w = layout_window(to);
-    s_focus = get_testwin(w);
+    if (s_focus)
+        window_invalidate(s_focus);
+    s_focus = w;
     window_invalidate(w);
 }
 
-testwin *testwin_add()
+window *testwin_add()
 {
     char sz[32];
     sprintf(sz, "t%d", ++s_counter);
-    return testwin_create(sz);
+    return testwin_create(sz)->w;
 }
 
-void testwin_remove(testwin *t)
+void testwin_remove(window *w)
 {
-    layout *lay = laymgr_find(s_lm, t->w);
-    if (t == s_focus)
+    if (w == s_focus)
     {
-        layout *new = layout_navigate_ordered(lay, 1);
-        set_focus(new);
+        window *next = layout_navigate_ordered(w, 1);
+        set_focus(next);
     }
 
-    if (lay)
-        layout_close(lay);
-    window_destroy(t->w);
+    layout_close(w);
+    window_destroy(w);
 }
 
-void navigate_dir(layout *lay, int dir)
+void navigate_dir(window *w, int dir)
 {
-    testwin *focus_old = s_focus;
     rect rc;
-    window_rect(focus_old->w, &rc);
+    window_rect(s_focus, &rc);
 
-    layout *layT = layout_navigate_dir(lay, 0, rect_height(&rc) - 1, dir);
-    if (layT)
-        set_focus(layT);
+    w = layout_navigate_dir(w, 0, rect_height(&rc) - 1, dir);
+    if (w)
+        set_focus(w);
 }
 
-void dir_cmd(layout *lay, int dir)
+void dir_cmd(window *w, int dir)
 {
     switch (s_cmd)
     {
     case CMD_NONE:
         break;
     case CMD_SPLIT:
-        layout_split(lay, testwin_add()->w, s_splitter, SIZE_HALF, dir);
+        layout_split(w, testwin_add(), s_splitter, SIZE_HALF, dir);
         break;
     case CMD_SELECTEDGE:
         s_edge = dir;
@@ -243,25 +236,23 @@ void dir_cmd(layout *lay, int dir)
         break;
     case CMD_SIZE:
         if (IS_DIR_VERT(s_edge) == IS_DIR_VERT(dir))
-            layout_move_edge(lay, IS_DIR_PREV(dir) ? -1 : 1, s_edge);
+            layout_move_edge(w, IS_DIR_PREV(dir) ? -1 : 1, s_edge);
         break;
     case CMD_NAV:
-        navigate_dir(lay, dir);
+        navigate_dir(w, dir);
         break;
     }
 }
 
 void handle_input()
 {
-    testwin *t = s_focus;
-    layout *lay = laymgr_find(s_lm, t->w);
-    int ch = wgetch(window_WIN(t->w));
+    int ch = wgetch(window_WIN(s_focus));
     switch (ch)
     {
     case 353:
         // Shift-tab
         {
-            layout *prev = layout_navigate_ordered(lay, 0);
+            window *prev = layout_navigate_ordered(s_focus, 0);
             if (prev)
                 set_focus(prev);
         }
@@ -270,7 +261,7 @@ void handle_input()
     case '\t':
         // Tab
         {
-            layout *next = layout_navigate_ordered(lay, 1);
+            window *next = layout_navigate_ordered(s_focus, 1);
             if (next)
                 set_focus(next);
         }
@@ -281,7 +272,7 @@ void handle_input()
         break;
 
     case 'd':
-        testwin_remove(t);
+        testwin_remove(s_focus);
         break;
 
     case 'q':
@@ -305,19 +296,19 @@ void handle_input()
         break;
 
     case KEY_LEFT:
-        dir_cmd(lay, DIR_LEFT);
+        dir_cmd(s_focus, DIR_LEFT);
         break;
 
     case KEY_UP:
-        dir_cmd(lay, DIR_UP);
+        dir_cmd(s_focus, DIR_UP);
         break;
 
     case KEY_RIGHT:
-        dir_cmd(lay, DIR_RIGHT);
+        dir_cmd(s_focus, DIR_RIGHT);
         break;
 
     case KEY_DOWN:
-        dir_cmd(lay, DIR_DOWN);
+        dir_cmd(s_focus, DIR_DOWN);
         break;
     }
 }
@@ -376,7 +367,7 @@ void breakhere() {}
 
 int main(int argc, char **argv)
 {
-#if 1
+#if 0
     char c;
     read(0, &c, 1);
     breakhere();
@@ -394,12 +385,15 @@ int main(int argc, char **argv)
     }
 
     s_lm = laymgr_create(NULL);
-    layout *lay1 = laymgr_root(s_lm);
-    layout_set_window(lay1, testwin_add()->w);
-    layout *lay2 = layout_split(lay1, testwin_add()->w, 0, SIZE_HALF, DIR_DOWN);
-    layout *lay3 = layout_split(lay2, testwin_add()->w, 1, SIZE_HALF, DIR_RIGHT);
-    layout *lay4 = layout_split(lay3, testwin_add()->w, 0, SIZE_HALF, DIR_UP);
-    set_focus(layout_navigate_ordered(laymgr_root(s_lm), 1));
+    window *w1 = testwin_add();
+    layout_split(NULL, w1, 0, 0, 0);
+    window *w2 = testwin_add();
+    layout_split(w1, w2, 0, SIZE_HALF, DIR_DOWN);
+    window *w3 = testwin_add();
+    layout_split(w2, w3, 1, SIZE_HALF, DIR_RIGHT);
+    window *w4 = testwin_add();
+    layout_split(w3, w4, 0, SIZE_HALF, DIR_UP);
+    set_focus(w1);
 
     main_loop();
 

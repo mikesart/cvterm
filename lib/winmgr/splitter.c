@@ -31,7 +31,7 @@ void splitter_paint(splitter *spltr)
     }
 }
 
-uint32_t splitter_proc(splitter *spltr, int id, const message_data *data)
+uintptr_t splitter_proc(splitter *spltr, int id, const message_data *data)
 {
     switch (id)
     {

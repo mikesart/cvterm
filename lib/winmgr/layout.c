@@ -5,6 +5,14 @@
 #include "layout.h"
 #include "splitter.h"
 
+// Layout manager window messages
+enum
+{
+    LM_UPDATE = WM_USER + 0xa000,
+    LM_GETLAYPTR,
+    LM_GETLAYMGRPTR,
+};
+
 // Manages a layout tree.
 struct laymgr
 {
@@ -14,9 +22,6 @@ struct laymgr
     layout *root; // root layout
     int update; // 1 if a layout update needs to occur
 };
-
-// To perform async update
-#define LM_UPDATE (WM_USER + 0x1000)
 
 // Min size of a layout (default). Window can respond to WM_GETMINSIZE
 // to override.
@@ -44,6 +49,10 @@ struct layout
     // if client == NULL, layout is a container of layouts in a flow direction.
     window *client;
 
+    // The client's handler is overridden to hide layout * from the api
+    handler h;
+    handler h_old;
+
     // Layouts can optionally have splitters, layed out in the order of splitter
     // then client in a given flow direction. The splitter for the first
     // layout is always NULL.
@@ -66,9 +75,16 @@ layout *layout_alloc(laymgr *lm, layout *parent, window *client, int size);
 void layout_free(layout *lay);
 void laymgr_update(laymgr *lm, int async);
 void layout_validate(layout *lay);
+void layout_close_helper(layout *lay, int promote);
+layout *layout_split_helper(layout *ref, window *client, int splitter, int size, int dir);
 void update_child_size(layout *parent, int vert, int size_changed);
 
-uint32_t host_proc(laymgr *lm, int id, const message_data *data)
+laymgr *window_laymgr(window *w)
+{
+    return (laymgr *)handler_call(window_handler(w), LM_GETLAYMGRPTR, NULL);
+}
+
+uintptr_t host_proc(laymgr *lm, int id, const message_data *data)
 {
     switch (id)
     {
@@ -90,6 +106,9 @@ uint32_t host_proc(laymgr *lm, int id, const message_data *data)
     case LM_UPDATE:
         laymgr_update(lm, 0);
         break;
+
+    case LM_GETLAYMGRPTR:
+        return (uintptr_t)lm;
     }
 
     return handler_call(lm->h_old, id, data);
@@ -102,41 +121,15 @@ laymgr *laymgr_create(window *host)
     lm->host = host;
     lm->h = handler_create(lm, (handler_proc)host_proc);
     lm->h_old = window_set_handler(lm->host, lm->h);
-    lm->root = layout_alloc(lm, NULL, NULL, 0);
     return lm;
 }
 
 void laymgr_destroy(laymgr *lm)
 {
-    layout_close(lm->root);
+    layout_close_helper(lm->root, 0);
     window_set_handler(lm->host, lm->h_old);
     handler_destroy(lm->h);
     free(lm);
-}
-
-layout *laymgr_root(laymgr *lm)
-{
-    return lm->root;
-}
-
-layout *layout_find_helper(layout *lay, window *w)
-{
-    if (lay->client == w)
-        return lay;
-
-    for (layout *child = lay->child; child != NULL; child = child->next)
-    {
-        layout *found = layout_find_helper(child, w);
-        if (found)
-            return found;
-    }
-
-    return NULL;
-}
-
-layout *laymgr_find(laymgr *lm, window *w)
-{
-    return layout_find_helper(lm->root, w);
 }
 
 void layout_min_size(layout *lay, int *width_min, int *height_min)
@@ -316,19 +309,51 @@ void set_splitter_visible(layout *lay, int visible)
     }
 }
 
+layout *window_layout(window *w)
+{
+    return (layout *)handler_call(window_handler(w), LM_GETLAYPTR, NULL);
+}
+
+uintptr_t layout_proc(layout *lay, int id, const message_data *data)
+{
+    switch (id)
+    {
+    case LM_GETLAYPTR:
+        return (uintptr_t)lay;
+    }
+
+    return handler_call(lay->h_old, id, data);
+}
+
 layout *layout_alloc(laymgr *lm, layout *parent, window *client, int size)
 {
+    // client shouldn't have a layout yet
+    assert(!window_layout(client));
+
     layout *lay = malloc(sizeof(layout));
     memset(lay, 0, sizeof(*lay));
     lay->lm = lm;
     lay->parent = parent;
-    lay->client = client;
     lay->size = size;
+    if (client)
+    {
+        lay->client = client;
+        lay->h = handler_create(lay, (handler_proc)layout_proc);
+        lay->h_old = window_set_handler(client, lay->h);
+        window_set_visible(client, 1);
+    }
+
     return lay;
 }
 
 void layout_free(layout *lay)
 {
+    if (lay->client)
+    {
+        window_set_visible(lay->client, 0);
+        window_set_handler(lay->client, lay->h_old);
+        handler_destroy(lay->h);
+    }
     set_splitter_visible(lay, 0);
     free(lay);
 }
@@ -517,42 +542,46 @@ layout *create_child_split(layout *ref, window *client, int splitter, int size, 
        
     // Now split this ref, which will be an inline split. This should succeed
     // because of the earlier size check.
-    layout *result = layout_split(ref, client, splitter, size, dir);
+    layout *result = layout_split_helper(ref, client, splitter, size, dir);
     assert(result != NULL);
     return result;
 }
 
-layout *layout_split(layout *ref, window *w, int splitter, int size, int dir)
+layout *layout_split_helper(layout *ref, window *client, int splitter, int size, int dir)
 {
     // Split in the direction of the parent flow?
     if (ref->parent && IS_DIR_VERT(dir) == ref->parent->vert)
     {
         // This creates a new layout in line with ref
-        return create_inline_split(ref, w, splitter, size, dir);
+        return create_inline_split(ref, client, splitter, size, dir);
     }
     else
     {
         // This re-parents ref to be a child of a new containing parent
         // with a flow in the requested direction.
-        return create_child_split(ref, w, splitter, size, dir);
+        return create_child_split(ref, client, splitter, size, dir);
     }
 }
 
-window *layout_window(layout *lay)
+int layout_split(window *ref_w, window *client, int splitter, int size, int dir)
 {
-    return lay->client;
-}
+    // Get the layout for this window
+    layout *ref = window_layout(ref_w);
+    if (!ref)
+    {
+        // It could be the host window, which is treated as the first split
+        laymgr *lm = window_laymgr(ref_w);
+        if (!lm)
+            return 0;
 
-int layout_set_window(layout *lay, window *w)
-{
-    // Fail if this layout is a parent of other layouts
-    if (lay->child)
-        return 0;
+        assert(!lm->root);
+        lm->root = layout_alloc(lm, NULL, client, 0);
+        laymgr_update(lm, true);
+        return 1;
+    }
 
-    // Allow setting the window independent of min sizes
-    lay->client = w;
-    laymgr_update(lay->lm, true);
-    return 1;
+    layout *lay = layout_split_helper(ref, client, splitter, size, dir);
+    return lay != NULL;
 }
 
 void layout_list_remove(layout *lay)
@@ -669,8 +698,9 @@ void layout_close_helper(layout *lay, int promote)
     layout_free(lay);
 }
 
-void layout_close(layout *lay)
+void layout_close(window *w)
 {
+    layout *lay = window_layout(w);
     layout_close_helper(lay, 1);
 }
 
@@ -707,9 +737,10 @@ layout *find_move_layout(layout *lay, int edge)
     return layT;
 }
 
-int layout_move_edge(layout *lay, int delta, int edge)
+int layout_move_edge(window *w, int delta, int edge)
 {
     // Find the layout whose size will be adjusted
+    layout *lay = window_layout(w);
     layout *layT = find_move_layout(lay, edge);
 
     // Try the opposite edge if the passed in edge didn't work
@@ -829,7 +860,7 @@ layout *find_closest_layout(layout *lay, int x, int y)
     return lay;
 }
 
-layout *layout_navigate_dir(layout *lay, int x, int y, int dir)
+layout *layout_navigate_dir_helper(layout *lay, int x, int y, int dir)
 {
     // Find the layout with the edge we want to navigate across
     layout *layT = find_move_layout(lay, dir);
@@ -852,6 +883,14 @@ layout *layout_navigate_dir(layout *lay, int x, int y, int dir)
     // Now find the child, if any, that is closest to x, y
     window_map_point(lay->client, lay->lm->host, &x, &y);
     return find_closest_layout(layT, x, y);
+}
+
+window *layout_navigate_dir(window *w, int x, int y, int dir)
+{
+    layout *lay = layout_navigate_dir_helper(window_layout(w), x, y, dir);
+    if (!lay)
+        return NULL;
+    return lay->client;
 }
 
 layout *find_child_ordered(layout *lay, int next)
@@ -914,7 +953,7 @@ layout *navigate_ordered_helper(layout *lay, int next)
     return find_child_ordered(layT, next);
 }
 
-layout *layout_navigate_ordered(layout *lay, int next)
+layout *layout_navigate_ordered_helper(layout *lay, int next)
 {
     // Find the first or last layout in the children of root
     if (!lay->parent)
@@ -929,6 +968,14 @@ layout *layout_navigate_ordered(layout *lay, int next)
     for (layout *layE = lay; layE != NULL; layE = navigate_ordered_helper(layE, !next))
         layT = layE;
     return layT;
+}
+
+window *layout_navigate_ordered(window *w, int next)
+{
+    layout *lay = layout_navigate_ordered_helper(window_layout(w), next);
+    if (!lay)
+        return NULL;
+    return lay->client;
 }
 
 void apply_layout(layout *lay, const rect *rc)

@@ -37,7 +37,7 @@ static int s_pipe_signaled;
 static void sigwinch_signal_handler(int sig);
 
 window *new_window(winmgr *wm, window *parent, WINDOW *win, const rect *rc, handler h, int id);
-uint32_t winmgr_proc(winmgr *wm, int id, const message_data *data);
+uintptr_t winmgr_proc(winmgr *wm, int id, const message_data *data);
 void window_invalidate_rect(window *w, const rect *rc);
 static winmgr *s_winmgr;
 
@@ -248,7 +248,7 @@ void winmgr_update()
     }
 }
 
-uint32_t winmgr_proc(winmgr *wm, int id, const message_data *data)
+uintptr_t winmgr_proc(winmgr *wm, int id, const message_data *data)
 {
     switch (id)
     {
