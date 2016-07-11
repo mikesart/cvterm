@@ -11,6 +11,7 @@
 struct winmgr
 {
     window *root;
+    window *focus;
     int invalid;
     handler h;
     int resize[2];
@@ -260,6 +261,28 @@ uintptr_t winmgr_proc(winmgr *wm, int id, const message_data *data)
     return 0;
 }
 
+void winmgr_set_focus(window *w)
+{
+    winmgr *wm = s_winmgr;
+
+    if (w != wm->focus)
+    {
+        if (wm->focus)
+            handler_call(wm->focus->h, WM_LOSEFOCUS, NULL);
+
+        wm->focus = w;
+
+        if (wm->focus)
+            handler_call(wm->focus->h, WM_SETFOCUS, NULL);
+    }
+}
+
+window *winmgr_focus()
+{
+    winmgr *wm = s_winmgr;
+    return wm->focus;
+}
+
 window *window_create(window *parent, const rect *rc, handler h, int id)
 {
     winmgr *wm = s_winmgr;
@@ -336,6 +359,11 @@ void window_destroy(window *w)
     while (w->child)
         window_destroy(w->child);
 
+    // Nothing auto-magic when the focused window is destroyed.
+    if (w == w->wm->focus)
+        winmgr_set_focus(NULL);
+
+    // Let handlers get notified and free associated resources
     handler_call(w->h, WM_DESTROY, NULL);
 
     // Unlink it    

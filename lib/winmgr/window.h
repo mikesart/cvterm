@@ -15,6 +15,8 @@ enum
     WM_PAINT,
     WM_POSCHANGED,
     WM_GETMINSIZE,
+    WM_SETFOCUS,
+    WM_LOSEFOCUS,
     WM_QUIT,
     WM_USER = 0x1000
 };
@@ -57,6 +59,8 @@ void winmgr_shutdown();
 void winmgr_update();
 int winmgr_resize_fd();
 void winmgr_resize();
+void winmgr_set_focus(window *w);
+window *winmgr_focus();
 
 window *window_create(window *parent, const rect *rc, handler h, int id);
 void window_destroy(window *w);

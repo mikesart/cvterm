@@ -29,7 +29,6 @@ typedef struct
     statusbar *sb;
 } testwin;
 
-window *s_focus;
 laymgr *s_lm;
 int s_splitter;
 int s_edge;
@@ -66,6 +65,11 @@ uintptr_t testwin_proc(testwin *t, int id, const message_data *data)
             rect_set(&rc, 0, height - 1, width, height);
             window_set_pos(t->sb->w, &rc);
         }
+        break;
+
+    case WM_SETFOCUS:
+    case WM_LOSEFOCUS:
+        window_invalidate(t->w);
         break;
 
     case WM_DESTROY:
@@ -127,7 +131,7 @@ uintptr_t statusbar_proc(statusbar *sb, int id, const message_data *data)
             window_rect(sb->w, &rc);
             wattron(win, A_REVERSE);
             mvwhline(win, 0, 0, ' ', rc.right - rc.left);
-            testwin *t = get_testwin(s_focus);
+            testwin *t = get_testwin(winmgr_focus());
             if (t && t->sb == sb)
             {
                 wattron(win, A_BOLD);
@@ -184,14 +188,6 @@ testwin *testwin_create(const char *message)
     return t;
 }
 
-void set_focus(window *w)
-{
-    if (s_focus)
-        window_invalidate(s_focus);
-    s_focus = w;
-    window_invalidate(w);
-}
-
 window *testwin_add()
 {
     char sz[32];
@@ -201,10 +197,10 @@ window *testwin_add()
 
 void testwin_remove(window *w)
 {
-    if (w == s_focus)
+    if (w == winmgr_focus())
     {
         window *next = layout_navigate_ordered(w, 1);
-        set_focus(next);
+        winmgr_set_focus(next);
     }
 
     layout_close(w);
@@ -214,11 +210,11 @@ void testwin_remove(window *w)
 void navigate_dir(window *w, int dir)
 {
     rect rc;
-    window_rect(s_focus, &rc);
+    window_rect(winmgr_focus(), &rc);
 
     w = layout_navigate_dir(w, 0, rect_height(&rc) - 1, dir);
     if (w)
-        set_focus(w);
+        winmgr_set_focus(w);
 }
 
 void dir_cmd(window *w, int dir)
@@ -246,24 +242,25 @@ void dir_cmd(window *w, int dir)
 
 void handle_input()
 {
-    int ch = wgetch(window_WIN(s_focus));
+    window *focus = winmgr_focus();
+    int ch = wgetch(window_WIN(focus));
     switch (ch)
     {
     case 353:
         // Shift-tab
         {
-            window *prev = layout_navigate_ordered(s_focus, 0);
+            window *prev = layout_navigate_ordered(focus, 0);
             if (prev)
-                set_focus(prev);
+                winmgr_set_focus(prev);
         }
         break;
 
     case '\t':
         // Tab
         {
-            window *next = layout_navigate_ordered(s_focus, 1);
+            window *next = layout_navigate_ordered(focus, 1);
             if (next)
-                set_focus(next);
+                winmgr_set_focus(next);
         }
         break;
 
@@ -272,7 +269,7 @@ void handle_input()
         break;
 
     case 'd':
-        testwin_remove(s_focus);
+        testwin_remove(focus);
         break;
 
     case 'q':
@@ -296,19 +293,19 @@ void handle_input()
         break;
 
     case KEY_LEFT:
-        dir_cmd(s_focus, DIR_LEFT);
+        dir_cmd(focus, DIR_LEFT);
         break;
 
     case KEY_UP:
-        dir_cmd(s_focus, DIR_UP);
+        dir_cmd(focus, DIR_UP);
         break;
 
     case KEY_RIGHT:
-        dir_cmd(s_focus, DIR_RIGHT);
+        dir_cmd(focus, DIR_RIGHT);
         break;
 
     case KEY_DOWN:
-        dir_cmd(s_focus, DIR_DOWN);
+        dir_cmd(focus, DIR_DOWN);
         break;
     }
 }
@@ -393,7 +390,7 @@ int main(int argc, char **argv)
     layout_split(w2, w3, 1, SIZE_HALF, DIR_RIGHT);
     window *w4 = testwin_add();
     layout_split(w3, w4, 0, SIZE_HALF, DIR_UP);
-    set_focus(w1);
+    winmgr_set_focus(w1);
 
     main_loop();
 
