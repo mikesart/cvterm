@@ -15,8 +15,8 @@ enum {
 };
 
 // Convenience macros
-#define IS_DIR_VERT(dir) (!!(!((dir) & 1)))
-#define IS_DIR_PREV(dir) (!!(!((dir) & 2)))
+#define IS_DIR_VERT(dir) (!((dir) & 1))
+#define IS_DIR_PREV(dir) (!((dir) & 2))
 #define DIR_REVERSE(dir) ((dir) ^ 2)
 
 // Special size constant to pass into layout_split. If half doesn't fit,

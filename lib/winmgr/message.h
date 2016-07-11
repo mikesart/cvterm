@@ -47,10 +47,10 @@ void message_dispatch(void *msg);
 void message_set_hook(handler h);
 void message_hook_readable();
 
-typedef uint32_t (*handler_proc)(void *user, int id, const void *data);
+typedef uintptr_t (*handler_proc)(void *user, int id, const void *data);
 
 handler handler_create(void *user, handler_proc proc);
 void handler_destroy(handler h);
-uint32_t handler_call(handler h, int id, const void *data);
+uintptr_t handler_call(handler h, int id, const void *data);
 
 #endif // __MESSAGE_H__

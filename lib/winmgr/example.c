@@ -18,7 +18,7 @@ typedef struct
     char message[128];
 } testwin;
 
-uint32_t testwin_proc(testwin *t, int id, const message_data *data)
+uintptr_t testwin_proc(testwin *t, int id, const message_data *data)
 {
     switch (id)
     {
@@ -86,7 +86,7 @@ void get_child_rect(int id, rect *rc)
         rect_set(rc, (rc_parent.right - rc_parent.left) / 2, 0, rc_parent.right, rc_parent.bottom);
 }
 
-uint32_t root_proc(root *r, int id, const message_data *data)
+uintptr_t root_proc(root *r, int id, const message_data *data)
 {
     switch (id) {
     case WM_POSCHANGED:

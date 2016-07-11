@@ -916,6 +916,10 @@ layout *navigate_ordered_helper(layout *lay, int next)
 
 layout *layout_navigate_ordered(layout *lay, int next)
 {
+    // Find the first or last layout in the children of root
+    if (!lay->parent)
+        return find_child_ordered(lay->lm->root, next);
+
     // Try to go in the direction requested
     layout *layT = navigate_ordered_helper(lay, next);
     if (layT)
@@ -981,8 +985,6 @@ void apply_layout(layout *lay, const rect *rc)
 
 void laymgr_update(laymgr *lm, int async)
 {
-    layout_validate(lm->root);
-
     if (async)
     {
         if (!lm->update)
@@ -998,6 +1000,7 @@ void laymgr_update(laymgr *lm, int async)
     rect rc;
     window_rect(lm->host, &rc);
     apply_layout(lm->root, &rc);
+    layout_validate(lm->root);
 }
 
 void layout_validate(layout *lay)

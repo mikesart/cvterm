@@ -229,7 +229,7 @@ void handler_destroy(handler h)
     }
 }
 
-uint32_t handler_call(handler h, int id, const void *data)
+uintptr_t handler_call(handler h, int id, const void *data)
 {
     message_handler *m = (message_handler *)handle_get_ptr(h);
     if (m)
